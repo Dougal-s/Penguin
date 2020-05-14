@@ -1,0 +1,151 @@
+#sidebar {
+    border-right: solid black 1px;
+
+    position: absolute;
+    left: 0;
+    width: 15rem;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--bg-color-1);
+    z-index: 1;
+    box-shadow: 0 0px 20px 0px rgba(0.0, 0.0, 0.0, 0.4);
+    box-sizing: border-box;
+}
+
+#sidebar-content {
+    width: 100%;
+    height: calc(100% - 3rem);
+    overflow-y: auto;
+}
+
+#sidebar[compact="true"] > #sidebar-content {
+    display: none;
+}
+
+#sidebar-content > h1 {
+    margin: 2rem;
+    color: var(--text-color-4);
+    font-weight: 300;
+    user-select: none;
+}
+
+#categories {
+    list-style: none;
+    padding: 0;
+    border-top: solid 1px var(--bg-color-0);
+}
+
+#categories > li {
+    padding: 0.5rem 3rem;
+    font-size: 1rem;
+    border-bottom: solid 1px var(--bg-color-0);
+    color: var(--text-color-4);
+    user-select: none;
+
+    display: block;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#categories > li:hover {
+    cursor: pointer;
+}
+
+#selected-category {
+    background-color: var(--bg-color-2);
+    box-shadow: 0 0 20px #00000080;
+}
+
+#tags {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0 2rem;
+}
+
+#tags > li {
+    font-size: 0.8rem;
+    border-radius: 1.25em;
+    padding: 0.25em 0.625em;
+    margin-right: 0.625em;
+    margin-bottom: 0.625em;
+
+    flex: initial;
+    background-color: var(--bg-color-2);
+    color: var(--text-color-4);
+
+    max-width: 9rem;
+
+    user-select: none;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#tags > li:hover {
+    cursor: pointer;
+}
+
+#tags > .selected-tag {
+    background-color: var(--bg-color-3);
+    color: var(--text-color-1);
+    #405080;
+}
+
+#sidebar[compact="true"] > #settings-panel {
+    background: transparent;
+}
+
+#settings-panel {
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    height: 3rem;
+    background-color: var(--bg-color-0);
+    display: flex;
+    flex-flow: row nowrap;
+}
+
+#settings-panel > svg {
+    flex: initial;
+    flex-shrink: 0;
+    flex-grow: 0;
+    transition: transform 0.2s;
+    padding: 0.5rem;
+    fill: var(--text-color-3);
+    height: 2rem;
+}
+
+#settings-panel > svg:hover {
+    transform: rotate(60deg);
+    fill: var(--text-color-4);
+    cursor: pointer;
+}
+
+#settings-panel > #gain-slider {
+    background-color: var(--bg-color-1);
+    flex: auto;
+    margin: 0.5rem;
+    margin-left: 0;
+    width: 100%;
+    position: relative;
+}
+
+#gain-slider > #gain-slider-trail {
+    position: absolute;
+    background: linear-gradient(-90deg, #333eadf0, #333ead80);
+    left: 0;
+    width: 75%;
+    height: 100%;
+}
+
+#gain-slider > #gain-slider-thumb {
+    position: absolute;
+    transform: translateX(-50%);
+    height: 100%;
+    left: 75%;
+    width: 0.1rem;
+    background-color: #333EAD;
+}

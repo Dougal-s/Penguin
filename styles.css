@@ -1,0 +1,305 @@
+*:focus {
+    outline: none;
+}
+
+::-webkit-scrollbar {
+    z-index: 0;
+    border: none;
+    width: 0.6rem;
+}
+
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-clip: content-box;
+    background-color: var(--bg-color-4);
+    border: solid 0.1rem transparent;
+    border-radius: 0.3rem;
+    background-color: #808080;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #606060;
+    border: solid 0.08rem transparent;
+}
+
+body {
+    overflow: hidden;
+    font-family: Roboto;
+    margin: 0;
+}
+
+#drag {
+    z-index: 256;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1rem;
+    transform: translateX(-50%);
+    left: 15rem;
+}
+
+#drag:hover {
+    cursor: col-resize;
+}
+
+
+#main-panel {
+    min-width: 20rem;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    right: 0;
+    left: 15rem;
+    height: 100%;
+    z-index: 0;
+    overflow: hidden;
+    background-color: var(--bg-color-4);
+}
+
+#top-panel {
+    z-index: 100;
+    flex: initial;
+    display: flex;
+    background-color: var(--bg-color-0);
+    width: 100%;
+    height: 3rem;
+    padding: 0.5rem 0.25rem;
+    box-sizing: border-box;
+    box-shadow: inset 0 0 20px 0px black, 0 0 4px 0px black;
+}
+
+#more-actions {
+    margin: 0 0.5rem;
+    flex: none;
+}
+
+#more-actions > svg {
+    border-radius: 100%;
+    fill: var(--text-color-3);
+    height: 100%;
+}
+
+#more-actions > svg:hover {
+    background-color: var(--bg-color-2);
+    cursor: pointer;
+}
+
+#searchbar {
+    margin-left: 0.75rem;
+    flex: auto;
+    position: relative;
+}
+
+#searchbar input {
+    font-size: 1rem;
+    width: 100%;
+    height: 2rem;
+    border-radius: 1rem;
+    padding: 0.25rem 2.25rem;
+    border: none;
+    box-sizing: border-box;
+    background-color: var(--bg-color-2);
+    color: var(--text-color-4);
+}
+
+#searchbar > svg {
+    position: absolute;
+    top: 50%;
+    height: 1.5rem;
+    transform: translateY(-50%);
+    fill: var(--text-color-3);
+}
+
+#searchbar > #search-icon {
+    left: 0.5rem;
+}
+
+#searchbar > #delete-icon {
+    right: 0.5rem;
+}
+
+#searchbar > #delete-icon:hover {
+    fill: red;
+}
+
+#sample-list {
+    flex: auto;
+    overflow-y: scroll;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+#sample-list .sample:last-child {
+    border-bottom: none
+}
+
+.sample {
+    box-sizing: border-box;
+    width: 100%;
+    border-bottom: solid 1px var(--bg-color-3);
+    padding: 1rem;
+}
+
+.sample > div:first-child {
+    display: flex;
+    flex-flow: row nowrap;
+    overflow: hidden;
+    position: relative;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 2rem;
+}
+
+.sample .sample-title {
+    font-weight: 300;
+    line-height: 2rem;
+    font-size: 1.5rem;
+    color: var(--text-color-2);
+
+    display: inline-block;
+    margin: 0;
+    height: 2rem;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.sample .tag-list {
+    align-self: center;
+    height: 1.25rem;
+
+    display: inline-flex;
+    flex-flow: row wrap;
+    overflow: hidden;
+    margin: 0;
+    padding: 0 1rem;
+}
+
+.sample .tag-list > li {
+    display: inline;
+    font-size: 0.75rem;
+    border-radius: 1.25em;
+    padding: 0.25em 0.625em;
+    margin-right: 0.625em;
+
+    flex: initial;
+    background-color: var(--bg-color-5);
+    color: var(--text-color-6);
+
+    min-width: 1em;
+    max-width: 12em;
+
+    user-select: none;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.sample > .sample-path {
+    color: var(--text-color-3);
+
+    box-sizing: border-box;
+    line-height: 1.5rem;
+    height: 1.5rem;
+    width: 100%;
+    margin: 0.2rem 0 0.3rem;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.sample > .sample-player {
+    border-radius: 0.25rem;
+    position: relative;
+    margin-top: 1rem;
+    background-color: var(--bg-color-1);
+    width: 100%;
+    height: 7rem;
+}
+
+.sample-length {
+    font-size: 0.75rem;
+    line-height: 1em;
+    height: 1em;
+    padding: 0.25rem;
+    margin: 0;
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+    border-radius:0.2rem;
+    background-color: var(--bg-color-0);
+    color: var(--text-color-3);
+    user-select: none;
+}
+
+.sample-player .play-pause-button {
+    z-index: 256;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    height: 2rem;
+    filter: brightness(75%) drop-shadow(0 0 10px 0 rgba(0,0,0,0.2));
+}
+
+.sample-player .play-pause-button:hover {
+    filter: brightness(100%);
+    cursor: pointer;
+}
+
+.sample-player canvas {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.sample.selected-sample {
+    background: linear-gradient(90deg, #333eadf0, #333ead80);
+    border-color: #222528A0;
+}
+
+.selected-sample .sample-title {
+    color: var(--text-color-1);
+}
+
+.sample.selected-sample > .sample-path {
+    color: var(--text-color-2);
+}
+
+.sample-player .error-msg {
+    display: none;
+    flex-flow: row nowrap;
+    position: absolute;
+    bottom: 0.75rem;
+    left:0.75rem;
+    font-size: 0.8rem;
+    height: 1.5em;
+}
+
+.error-msg > svg {
+    display: inline-block;
+    height: 1.3em;
+    margin: 0.1em 0.2em 0.1em 0em;
+    fill: red;
+}
+
+.error-msg > p {
+    margin: 0;
+    line-height: 1.5em;
+    height: 1.5em;
+    display: inline;
+    color: red;
+}
+
+.sample.decode-error .sample-player .error-msg {
+    display: flex;
+}
