@@ -47,8 +47,45 @@ function drawWaveform(canvas, path) {
 	ctx.stroke(path.path)
 }
 
-let lastSelectedIndex = 0
 let templateTag = document.getElementById('template-tag')
+function setSampleTags(tagList, idx) {
+	tagList.innerHTML = ""
+	for (const tag of samples[idx].tags) {
+		let tagElem = templateTag.content.cloneNode(true)
+		tagElem.children[0].innerHTML = tag
+
+		let sampleMenu = new Menu
+		sampleMenu.append(
+			new MenuItem({
+				label: "remove tag",
+				click() {
+					samples[idx].tags.splice(samples[idx].tags.indexOf(tag), 1)
+					Array.from(tagList.children).find(elem => elem.innerHTML === tag).remove()
+				}
+			})
+		)
+
+		tagElem.children[0].addEventListener("mousedown", function(e) {
+			e.preventDefault()
+			e.stopPropagation()
+		})
+
+		tagElem.children[0].addEventListener("mouseup", function(e) {
+			e.preventDefault()
+			e.stopPropagation()
+		})
+
+		tagElem.children[0].addEventListener('contextmenu', function(e) {
+			sampleMenu.popup({ window: remote.getCurrentWindow() })
+			e.preventDefault()
+			e.stopPropagation()
+		})
+
+		tagList.appendChild(tagElem)
+	}
+}
+
+let lastSelectedIndex = 0
 function createSample(sampleInfo, idx) {
 
 	let sample = sampleTemplate.content.cloneNode(true)
@@ -79,39 +116,7 @@ function createSample(sampleInfo, idx) {
 
 	// set sample tags
 	let tagList = sample.children[0].getElementsByClassName('tag-list')[0]
-	for (const tag of sampleInfo.tags) {
-		let tagElem = templateTag.content.cloneNode(true)
-		tagElem.children[0].innerHTML = tag
-
-		let sampleMenu = new Menu
-		sampleMenu.append(
-			new MenuItem({
-				label: "remove tag",
-				click() {
-					samples[idx].tags = sampleInfo.splice(sampleInfo.tags.indexOf(tag), 1)
-				}
-			})
-		)
-
-		tagElem.children[0].addEventListener("mousedown", (e) => {
-			console.log('asdf')
-			e.preventDefault()
-			e.stopPropagation()
-		})
-
-		tagElem.children[0].addEventListener("mouseup", (e) => {
-			e.preventDefault()
-			e.stopPropagation()
-		})
-
-		tagElem.children[0].addEventListener('contextmenu', (e) => {
-			sampleMenu.popup({ window: remote.getCurrentWindow() })
-			e.preventDefault()
-			e.stopPropagation()
-		})
-
-		tagList.appendChild(tagElem)
-	}
+	setSampleTags(tagList, idx)
 
 	if (samples[idx].path) {
 		drawWaveform(sample.children[0].children[3].children[0], samples[idx].path)
@@ -245,12 +250,7 @@ function updateSample(idx) {
 
 	// set sample tags
 	let tagList = sample.getElementsByClassName('tag-list')[0]
-	tagList.innerHTML = "" // clear tags
-	for (const tag of samples[idx].tags) {
-		let tagElem = templateTag.content.cloneNode(true)
-		tagElem.children[0].innerHTML = tag
-		tagList.appendChild(tagElem)
-	}
+	setSampleTags(tagList, idx)
 }
 
 function updateWaveform(idx) {

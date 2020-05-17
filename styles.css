@@ -172,6 +172,7 @@ body {
 }
 
 .sample .tag-list {
+    z-index: 1;
     align-self: center;
     height: 1.25rem;
 
