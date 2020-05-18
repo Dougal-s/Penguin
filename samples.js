@@ -178,6 +178,37 @@ function createSample(sampleInfo, idx) {
 		ipcRenderer.send('ondragstart', returnSelectedPaths())
 	}
 
+	// play/pause on double click
+	sample.children[0].addEventListener("mouseup", function(e) {
+		if (e.detail%2 === 0) {
+			if (!samples[idx].buffer) { return }
+			if (samples[idx].audio) {
+				samples[idx].audio.stop()
+			} else {
+				for (let elem of samples) {
+					if (elem.audio) {
+						elem.audio.stop()
+					}
+				}
+
+				samples[idx].audio = audioCtx.createBufferSource()
+				samples[idx].audio.addEventListener('ended', () => {
+					if (samples[idx]) {
+						samples[idx].audio = null;
+						let sampleElement = document.getElementById(idx.toString())
+						if (sampleElement) {
+							sampleElement.children[3].children[1].src = "icons/play_circle_outline.svg"
+						}
+					}
+				})
+				samples[idx].audio.buffer = samples[idx].buffer
+				samples[idx].audio.connect(gainNode)
+				samples[idx].audio.start()
+				this.children[3].children[1].src = "icons/pause_circle_outline.svg"
+			}
+		}
+	})
+
 	sample.children[0].children[3].children[1].addEventListener("mousedown", (e) => {
 		e.preventDefault()
 		e.stopPropagation()
