@@ -292,10 +292,14 @@ function createSample(sampleInfo, idx) {
 					elem.audio.stop()
 				}
 			}
+			let playbackBar = document.createElement('div')
+			playbackBar.classList.add('playback-marker')
+			this.parentNode.append(playbackBar)
 
 			samples[idx].audio = audioCtx.createBufferSource()
 			samples[idx].audio.addEventListener('ended', () => {
 				if (samples[idx]) {
+					playbackBar.remove()
 					samples[idx].audio = null;
 					let sampleElement = document.getElementById(idx.toString())
 					if (sampleElement) {
@@ -306,6 +310,20 @@ function createSample(sampleInfo, idx) {
 			samples[idx].audio.buffer = samples[idx].buffer
 			samples[idx].audio.connect(gainNode)
 			samples[idx].audio.start()
+			let startTime = audioCtx.currentTime
+			function movePlaybackMarker() {
+				if (playbackBar.parentNode) {
+					let elapsed = audioCtx.currentTime - startTime
+					let length = samples[idx].duration
+					let width = playbackBar.parentNode.offsetWidth
+					playbackBar.style.left = elapsed/length * width + 'px'
+				}
+
+				if (samples[idx].audio) {
+					window.requestAnimationFrame(movePlaybackMarker)
+				}
+			}
+			window.requestAnimationFrame(movePlaybackMarker)
 			this.src = "icons/pause_circle_outline.svg"
 		}
 	})

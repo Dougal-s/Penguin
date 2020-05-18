@@ -217,15 +217,6 @@ body {
     text-overflow: ellipsis;
 }
 
-.sample > .sample-player {
-    border-radius: 0.25rem;
-    position: relative;
-    margin-top: 1rem;
-    background-color: var(--bg-color-1);
-    width: 100%;
-    height: 7rem;
-}
-
 .sample-length {
     font-size: 0.75rem;
     line-height: 1em;
@@ -241,6 +232,47 @@ body {
     user-select: none;
 }
 
+.sample.selected-sample {
+    background: linear-gradient(90deg, #333eadf0, #333ead80);
+    border-color: #222528A0;
+}
+
+.selected-sample .sample-title {
+    color: var(--text-color-1);
+}
+
+.sample.selected-sample > .sample-path {
+    color: var(--text-color-2);
+}
+
+.sample > .sample-player {
+    border-radius: 0.25rem;
+    position: relative;
+    margin-top: 1rem;
+    background-color: var(--bg-color-1);
+    width: 100%;
+    height: 7rem;
+    overflow: hidden;
+}
+
+.sample-player canvas {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.sample-player .playback-marker {
+    z-index: 10;
+    left: 0;
+    top: 0;
+    position: absolute;
+    background-color: #333ead;
+    width: 0.2rem;
+    height: 100%;
+    transform: translateX(-50%);
+}
+
 .sample-player .play-pause-button {
     z-index: 256;
     position: absolute;
@@ -254,26 +286,6 @@ body {
 .sample-player .play-pause-button:hover {
     filter: brightness(100%);
     cursor: pointer;
-}
-
-.sample-player canvas {
-    position: absolute;
-    top: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.sample.selected-sample {
-    background: linear-gradient(90deg, #333eadf0, #333ead80);
-    border-color: #222528A0;
-}
-
-.selected-sample .sample-title {
-    color: var(--text-color-1);
-}
-
-.sample.selected-sample > .sample-path {
-    color: var(--text-color-2);
 }
 
 .sample-player .error-msg {
