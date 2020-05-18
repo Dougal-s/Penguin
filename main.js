@@ -12,6 +12,7 @@ function createWindow() {
 		height: 800,
 		minWidth: 500,
 		minHeight: 300,
+		icon: "penguin-development.png",
 		webPreferences: {
 			nodeIntegration: true
 		}
