@@ -47,6 +47,12 @@ function drawWaveform(canvas, path) {
 	ctx.stroke(path.path)
 }
 
+function removeTag(tagList, idx, tag) {
+	samples[idx].tags.splice(samples[idx].tags.indexOf(tag), 1)
+	Array.from(tagList.children).find(elem => elem.innerHTML === tag).remove()
+	setSampleContextMenu(tagList.parentElement.parentElement, idx)
+}
+
 let templateTag = document.getElementById('template-tag')
 function setSampleTags(tagList, idx) {
 	tagList.innerHTML = ""
@@ -58,30 +64,76 @@ function setSampleTags(tagList, idx) {
 		sampleMenu.append(
 			new MenuItem({
 				label: "remove tag",
-				click() {
-					samples[idx].tags.splice(samples[idx].tags.indexOf(tag), 1)
-					Array.from(tagList.children).find(elem => elem.innerHTML === tag).remove()
-				}
+				click() { removeTag(tagList, idx, tag) }
 			})
 		)
 
-		tagElem.children[0].addEventListener("mousedown", function(e) {
-			e.preventDefault()
-			e.stopPropagation()
-		})
+		tagElem.children[0].addEventListener("mousedown", e => { e.stopPropagation() })
+		tagElem.children[0].addEventListener("mouseup", e => { e.stopPropagation() })
 
-		tagElem.children[0].addEventListener("mouseup", function(e) {
-			e.preventDefault()
-			e.stopPropagation()
-		})
-
-		tagElem.children[0].addEventListener('contextmenu', function(e) {
+		tagElem.children[0].addEventListener('contextmenu', (e) => {
 			sampleMenu.popup({ window: remote.getCurrentWindow() })
 			e.preventDefault()
 			e.stopPropagation()
 		})
 
 		tagList.appendChild(tagElem)
+	}
+}
+
+function setSampleContextMenu(sample, idx) {
+	// context menu
+	let sampleMenu = new Menu
+	sampleMenu.append(
+		new MenuItem({
+			label: "remove from selected category",
+			click() {
+				let category = document.getElementById('selected-category')
+				if (category) {
+					samples[idx].categories.splice(samples[idx].categories.indexOf(category.innerHTML), 1)
+					setSampleContextMenu(sample, idx)
+				}
+			}
+		})
+	)
+	let contextMenuCategories = [];
+	for (const category of samples[idx].categories) {
+		contextMenuCategories.push({
+			label: category,
+			click() {
+				samples[idx].categories.splice(samples[idx].categories.indexOf(category), 1)
+				setSampleContextMenu(sample, idx)
+			}
+		})
+	}
+	sampleMenu.append(
+		new MenuItem({
+			type: "submenu",
+			label: "remove from category",
+			submenu: contextMenuCategories
+		})
+	)
+
+	let contextMenuTags = [];
+	let tagList = sample.children[0].getElementsByClassName('tag-list')[0]
+	for (const tag of samples[idx].tags) {
+		contextMenuTags.push({
+			label: tag,
+			click() { removeTag(tagList, idx, tag) }
+		})
+	}
+	sampleMenu.append(
+		new MenuItem({
+			type: "submenu",
+			label: "remove tag",
+			submenu: contextMenuTags
+		})
+	)
+
+	sample.children[0].oncontextmenu = function(e) {
+		sampleMenu.popup({ window: remote.getCurrentWindow() })
+		e.preventDefault()
+		e.stopPropagation()
 	}
 }
 
@@ -128,8 +180,12 @@ function createSample(sampleInfo, idx) {
 		sample.children[0].children[3].children[1].src = "icons/play_circle_outline.svg"
 	}
 
+	// Click events
 	let deselect = false
 	sample.children[0].addEventListener("mousedown", function(e) {
+		if (e.button !== 0) {
+			return
+		}
 		deselect = false
 
 		if (e.shiftKey && lastSelectedIndex != -1) {
@@ -160,6 +216,9 @@ function createSample(sampleInfo, idx) {
 	})
 
 	sample.children[0].addEventListener("mouseup", function(e) {
+		if (e.button !== 0) {
+			return
+		}
 		if (deselect) {
 			if (e.ctrlKey || samples.filter(info => info.selected).length === 1) {
 				sampleInfo.selected = false
@@ -172,6 +231,8 @@ function createSample(sampleInfo, idx) {
 			updateSampleListDisplay()
 		}
 	})
+
+	setSampleContextMenu(sample, idx)
 
 	sample.children[0].ondragstart = function(event) {
 		event.preventDefault()
@@ -282,6 +343,9 @@ function updateSample(idx) {
 	// set sample tags
 	let tagList = sample.getElementsByClassName('tag-list')[0]
 	setSampleTags(tagList, idx)
+
+	// update context menu
+	setSampleContextMenu(sample, idx)
 }
 
 function updateWaveform(idx) {

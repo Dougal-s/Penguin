@@ -79,6 +79,7 @@ function walk(dir, match, walkId) {
 				if (!match || match.test(path.basename(filePath))) {
 					window.send('add-sample', {
 						filePath: filePath,
+						categories: ["A debug category"],
 						tags: ['for debug purposes'],
 						match: match.source
 					})
