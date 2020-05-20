@@ -9,7 +9,6 @@
     background-color: var(--bg-color-1);
     z-index: 1;
     box-shadow: 0 0px 20px 0px rgba(0.0, 0.0, 0.0, 0.4);
-    box-sizing: border-box;
 }
 
 #sidebar-content {
@@ -156,6 +155,10 @@
     transform: rotate(60deg);
     fill: var(--text-color-4);
     cursor: pointer;
+}
+
+#sidebar[compact="true"] #gain-slider {
+    display: none;
 }
 
 #settings-panel > #gain-slider {

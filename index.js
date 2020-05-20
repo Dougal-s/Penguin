@@ -20,7 +20,7 @@ drag.addEventListener('mousedown', e => { resizing = true })
 window.addEventListener('mousemove', e => {
 	if (resizing) {
 		const compactWidth = remToPx(3);
-		const size = Math.min(Math.max(e.clientX, remToPx(15)), window.innerWidth-remToPx(16));
+		let size = Math.min(Math.max(e.clientX, remToPx(15)), window.innerWidth-remToPx(20));
 		if (e.clientX < compactWidth) {
 			sidebar.setAttribute('compact', "true")
 			size = compactWidth;
