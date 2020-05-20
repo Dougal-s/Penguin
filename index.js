@@ -8,10 +8,10 @@
  */
 
 
-let sidebar = document.getElementById('sidebar')
-let mainPanel = document.getElementById('main-panel')
+const sidebar = document.getElementById('sidebar')
+const mainPanel = document.getElementById('main-panel')
 
-let drag = document.getElementById('drag')
+const drag = document.getElementById('drag')
 
 let resizing = false;
 
@@ -19,8 +19,8 @@ drag.addEventListener('mousedown', e => { resizing = true })
 
 window.addEventListener('mousemove', e => {
 	if (resizing) {
-		const compactWidth = 3*remToPx;
-		let size = Math.min(Math.max(e.clientX, 15*remToPx), window.innerWidth-16*remToPx);
+		const compactWidth = remToPx(3);
+		const size = Math.min(Math.max(e.clientX, remToPx(15)), window.innerWidth-remToPx(16));
 		if (e.clientX < compactWidth) {
 			sidebar.setAttribute('compact', "true")
 			size = compactWidth;
@@ -37,17 +37,18 @@ window.addEventListener('mousemove', e => {
 
 window.addEventListener('mouseup', e => { resizing = false })
 
-let searchBar = document.getElementById('searchbar-text');
+const searchBar = document.getElementById('searchbar-text');
 searchBar.addEventListener('input', updateSamples);
 document.getElementById('delete-icon').addEventListener("click", () => {
 	searchBar.value = ""
 	updateSamples()
 })
 
-let categoryList = document.getElementById('categories')
-let categoryTemplate = document.getElementById('template-category')
+const categoryList = document.getElementById('categories')
+const categoryTemplate = document.getElementById('template-category')
+Object.freeze(categoryTemplate)
 function createCategoryElement(categoryName) {
-	let category = categoryTemplate.content.cloneNode(true)
+	const category = categoryTemplate.content.cloneNode(true)
 	category.children[0].innerHTML = categoryName
 
 	category.children[0].addEventListener("click", function(){
@@ -56,9 +57,7 @@ function createCategoryElement(categoryName) {
 			return
 		}
 
-		for (let elem of categoryList.children)
-			elem.id = ""
-
+		for (const elem of categoryList.children) { elem.id = "" }
 		this.id = "selected-category"
 	})
 	categoryList.appendChild(category)
@@ -67,12 +66,14 @@ function createCategoryElement(categoryName) {
 createCategoryElement("Percussion")
 createCategoryElement("Drums")
 createCategoryElement("Screams of the dead")
+createCategoryElement("A debug category")
 
 
-let tagList = document.getElementById('tags')
-let tagTemplate = document.getElementById('template-tag')
+const tagList = document.getElementById('tags')
+const tagTemplate = document.getElementById('template-tag')
+Object.freeze(tagTemplate)
 function createTagElement(tagName) {
-	let tag = tagTemplate.content.cloneNode(true)
+	const tag = tagTemplate.content.cloneNode(true)
 	tag.children[0].innerHTML = tagName
 
 	tag.children[0].addEventListener("click", function(){
@@ -86,10 +87,11 @@ createTagElement("Dark")
 createTagElement("Darker")
 createTagElement("Darkest")
 createTagElement("Darkerest")
+createTagElement("for debug purposes")
 
-let settings = document.getElementById('settings')
-let settingsIcon = document.getElementById('settings-icon')
-let closeSettingsBtn = document.getElementById('close-settings')
+const settings = document.getElementById('settings')
+const settingsIcon = document.getElementById('settings-icon')
+const closeSettingsBtn = document.getElementById('close-settings')
 closeSettingsBtn.addEventListener('click', () => {
 	settings.style.display = "none";
 })
@@ -99,19 +101,19 @@ settingsIcon.addEventListener('click', () => {
 
 let gainSliderMoving = false;
 
-let gainSlider = document.getElementById('gain-slider')
-let gainSliderThumb = document.getElementById('gain-slider-thumb')
-let gainSliderTrail = document.getElementById('gain-slider-trail')
+const gainSlider = document.getElementById('gain-slider')
+const gainSliderThumb = document.getElementById('gain-slider-thumb')
+const gainSliderTrail = document.getElementById('gain-slider-trail')
 
 gainSlider.addEventListener('mousedown', e => { gainSliderMoving = true })
 
 window.addEventListener('mousemove', e => {
 	if (gainSliderMoving) {
-		let boundingBox = gainSlider.getBoundingClientRect()
-		let dx = Math.min(Math.max(e.clientX-boundingBox.left, 0), boundingBox.width);
+		const boundingBox = gainSlider.getBoundingClientRect()
+		const dx = Math.min(Math.max(e.clientX-boundingBox.left, 0), boundingBox.width);
 		gainSliderThumb.style.left = dx + 'px'
 		gainSliderTrail.style.width = dx + 'px'
-		let gain = 12*4*(dx/boundingBox.width-0.75)
+		const gain = 12*4*(dx/boundingBox.width-0.75)
 		gainNode.gain.value = Math.pow(10, gain/20)
 	}
 })

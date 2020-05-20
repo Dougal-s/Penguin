@@ -1,9 +1,16 @@
 sampleDirs = document.getElementById('sample-dirs')
-let templateSampleDir = document.getElementById('template-sample-dir')
-let addSampleDirBtn = document.getElementById('add-dir')
+const templateSampleDir = document.getElementById('template-sample-dir')
+const addSampleDirBtn = document.getElementById('add-dir')
+
+function getSamplePaths() {
+    const paths = []
+    for (const dir of sampleDirs.children)
+        paths.push(dir.children[0].value)
+    return paths
+}
 
 function createSampleDir(path) {
-    let sampleDir = templateSampleDir.content.cloneNode(true)
+    const sampleDir = templateSampleDir.content.cloneNode(true)
     sampleDir.children[0].children[0].value = path
 
     sampleDir.children[0].children[0].addEventListener('change', (e) => {
@@ -30,23 +37,17 @@ function createSampleDir(path) {
             return
         }
 
-        let paths = []
-        for (const dir of sampleDirs.children)
-            paths.push(dir.children[0].value)
-        ipcRenderer.sendSync('updateSampleDirs', paths)
+        ipcRenderer.sendSync('updateSampleDirs', getSamplePaths())
         updateSamples()
     })
 
     sampleDir.children[0].children[1].addEventListener('click', (e) => {
         e.target.parentNode.children[0].classList.remove('error')
-        let path = dialog.showOpenDialogSync({ properties: ['openDirectory'] })
+        const path = dialog.showOpenDialogSync({ properties: ['openDirectory'] })
         if (!path) return
         e.target.parentNode.children[0].value = path
 
-        let paths = []
-        for (const dir of sampleDirs.children)
-            paths.push(dir.children[0].value)
-        ipcRenderer.sendSync('updateSampleDirs', paths)
+        ipcRenderer.sendSync('updateSampleDirs', getSamplePaths())
         updateSamples()
     })
 

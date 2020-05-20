@@ -1,9 +1,9 @@
 
 const {app, BrowserWindow, ipcMain} = require('electron')
-let fs = require('fs')
-let path = require('path')
+const fs = require('fs')
+const path = require('path')
 
-let settings = require('./settings.json')
+const settings = require('./settings.json')
 
 let window;
 function createWindow() {
@@ -66,8 +66,8 @@ let walkCount = 0;
 function walk(dir, match, walkId) {
 	if (walkId !== walkCount) return
 	fs.readdir(dir, (e, files) => {
-		for (let file of files) {
-			let filePath = path.join(dir, file)
+		for (const file of files) {
+			const filePath = path.join(dir, file)
 
 			fs.stat(filePath, (e, stats) => {
 				if (stats.isDirectory()) {
@@ -91,13 +91,13 @@ function walk(dir, match, walkId) {
 }
 
 ipcMain.on('update-samples', (event, match) => {
-	let regex = new RegExp(match, 'i')
+	const regex = new RegExp(match, 'i')
 	for (const dir of settings.sampleDirectories) walk(dir, regex, ++walkCount)
 })
 
 ipcMain.on('read-file', (event, filePath) => {
 	fs.readFile(filePath, (e, buffer) => {
-		window.send('file-data', {
+		event.sender.send('file-data', {
 			filePath: filePath,
 			buffer: buffer
 		})
