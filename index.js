@@ -44,8 +44,46 @@ document.getElementById('delete-icon').addEventListener("click", () => {
 	updateSamples()
 })
 
-const categoryList = document.getElementById('categories')
 const categoryTemplate = document.getElementById('template-category')
+function createEmptyCategoryElement() {
+	const category = categoryTemplate.content.cloneNode(true)
+	category.children[0].id = "new-category"
+	const name = document.createElement("input")
+	name.type = "text"
+	function checkForDeselect(e) {
+		if (e.target !== name) {
+			if (name.parentNode) { name.parentNode.remove() }
+			window.removeEventListener("click", checkForDeselect)
+		}
+	}
+	window.addEventListener("click", checkForDeselect)
+	name.addEventListener("change", (e) => {
+		if (e.target.value) {
+			// Check if the category already exists
+			if ([...categoryList.children].some(
+				elem => elem !== e.target && elem.innerHTML === e.target.value)
+			) {
+				e.target.style.borderColor = "red"
+				e.target.focus()
+				return
+			}
+			createCategoryElement(e.target.value)
+			ipcRenderer.send("addCategory", e.target.value)
+		}
+		e.target.parentNode.remove()
+		window.removeEventListener("click", checkForDeselect)
+	})
+	category.children[0].appendChild(name)
+	categoryList.insertBefore(category.children[0], addCategoryBtn).children[0].focus()
+}
+
+const addCategoryBtn = document.getElementById('add-category')
+addCategoryBtn.addEventListener('click', (e) => {
+	createEmptyCategoryElement()
+	e.stopPropagation()
+})
+
+const categoryList = document.getElementById('categories')
 Object.freeze(categoryTemplate)
 function createCategoryElement(categoryName) {
 	const category = categoryTemplate.content.cloneNode(true)
@@ -60,14 +98,27 @@ function createCategoryElement(categoryName) {
 		for (const elem of categoryList.children) { elem.id = "" }
 		this.id = "selected-category"
 	})
-	categoryList.appendChild(category)
+
+	const sampleMenu = Menu.buildFromTemplate([{
+		label: "remove category",
+		click() {
+			[...categoryList.children].find(elem => elem.innerHTML === categoryName).remove()
+			ipcRenderer.send('removeCategory', categoryName)
+		}
+	}])
+
+	category.children[0].addEventListener('contextmenu', (e) => {
+		sampleMenu.popup({ window: remote.getCurrentWindow() })
+		e.preventDefault()
+		e.stopPropagation()
+	})
+	categoryList.insertBefore(category, addCategoryBtn)
 }
 
-createCategoryElement("Percussion")
-createCategoryElement("Drums")
-createCategoryElement("Screams of the dead")
-createCategoryElement("A debug category")
-
+ipcRenderer.once('categories', (event, categories) => {
+	for (const category of categories) { createCategoryElement(category) }
+})
+ipcRenderer.send('getCategories')
 
 const tagList = document.getElementById('tags')
 const tagTemplate = document.getElementById('template-tag')

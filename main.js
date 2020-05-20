@@ -42,6 +42,26 @@ ipcMain.on('ondragstart', (event, filePaths) => {
 	});
 });
 
+ipcMain.once('getCategories', (event) => {
+	event.sender.send('categories', settings.categories)
+})
+
+ipcMain.on('addCategory', (event, category) => {
+	settings.categories.push(category)
+	fs.writeFile('settings.json', JSON.stringify(settings, null, '\t'), function(e) {
+		if (e) return console.log(e)
+		console.log('added category \'' + category + '\' to \'settings.json\'')
+	})
+})
+
+ipcMain.on('removeCategory', (event, category) => {
+	settings.categories.splice(settings.categories.indexOf(category), 1)
+	fs.writeFile('settings.json', JSON.stringify(settings, null, '\t'), function(e) {
+		if (e) return console.log(e)
+		console.log('removed category \'' + category + '\' in \'settings.json\'')
+	})
+})
+
 ipcMain.once('getSampleDirectories', (event) => {
 	event.sender.send('sampleDirectories', settings.sampleDirectories)
 })
@@ -50,7 +70,7 @@ ipcMain.on('updateSampleDirs', (event, paths) => {
 	settings.sampleDirectories = paths;
 	fs.writeFile('settings.json', JSON.stringify(settings, null, '\t'), function(e) {
 		if (e) return console.log(e)
-		console.log('set sampleDirectories in \'settings.json\' to [' + paths + ']')
+		console.log('updated sampleDirectories in \'settings.json\' to [' + paths + ']')
 	})
 	event.returnValue = "" // for if this was triggered via a sync action
 })
