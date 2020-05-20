@@ -39,9 +39,7 @@ function createSampleDir(path) {
 
     sampleDir.children[0].children[1].addEventListener('click', (e) => {
         e.target.parentNode.children[0].classList.remove('error')
-        let path = dialog.showOpenDialogSync({
-    		properties: ['openDirectory']
-    	})
+        let path = dialog.showOpenDialogSync({ properties: ['openDirectory'] })
         if (!path) return
         e.target.parentNode.children[0].value = path
 
@@ -60,8 +58,6 @@ addSampleDirBtn.addEventListener('click', (e) => {
 })
 
 ipcRenderer.once('sampleDirectories', (event, sampleDirectories) => {
-    for (const dir of sampleDirectories) {
-        createSampleDir(dir)
-    }
+    for (const dir of sampleDirectories) { createSampleDir(dir) }
 })
 ipcRenderer.send('getSampleDirectories')

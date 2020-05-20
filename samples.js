@@ -23,12 +23,11 @@ function createWaveformPath(audioBuffer) {
 		width: 1920,
 		height: 7.0*remToPx
 	}
-	const channelHeight = 7.0*remToPx/audioBuffer.numberOfChannels
-	const stepSize = 1920/audioBuffer.length
+	const channelHeight = path.height/audioBuffer.numberOfChannels
+	const stepSize = path.width/audioBuffer.length
 
 	for (let channel = 0; channel < audioBuffer.numberOfChannels; ++channel) {
 		let buffer = audioBuffer.getChannelData(channel)
-
 		path.path.moveTo(0, channelHeight*(channel + 0.5*(buffer[0]+1)))
 		for (let sample = 1; sample < audioBuffer.length; ++sample) {
 			path.path.lineTo(sample*stepSize, channelHeight*(channel + 0.5*(buffer[sample]+1)))
@@ -69,7 +68,6 @@ function setSampleTags(tagList, idx) {
 		)
 
 		tagElem.children[0].addEventListener("mousedown", e => { e.stopPropagation() })
-		tagElem.children[0].addEventListener("mouseup", e => { e.stopPropagation() })
 
 		tagElem.children[0].addEventListener('contextmenu', (e) => {
 			sampleMenu.popup({ window: remote.getCurrentWindow() })
@@ -130,7 +128,7 @@ function setSampleContextMenu(sample, idx) {
 		})
 	)
 
-	sample.children[0].oncontextmenu = function(e) {
+	sample.children[0].oncontextmenu = e => {
 		sampleMenu.popup({ window: remote.getCurrentWindow() })
 		e.preventDefault()
 		e.stopPropagation()
@@ -139,7 +137,6 @@ function setSampleContextMenu(sample, idx) {
 
 let lastSelectedIndex = 0
 function createSample(sampleInfo, idx) {
-
 	let sample = sampleTemplate.content.cloneNode(true)
 
 	sample.children[0].id = idx
@@ -182,11 +179,9 @@ function createSample(sampleInfo, idx) {
 
 	// Click events
 	let deselect = false
-	sample.children[0].addEventListener("mousedown", function(e) {
-		if (e.button !== 0) {
-			return
-		}
+	sample.children[0].addEventListener("mousedown", e => {
 		deselect = false
+		if (e.button !== 0) { return }
 
 		if (e.shiftKey && lastSelectedIndex != -1) {
             let rangeStart = Math.min(lastSelectedIndex, idx)
@@ -215,10 +210,8 @@ function createSample(sampleInfo, idx) {
 		updateSampleListDisplay()
 	})
 
-	sample.children[0].addEventListener("mouseup", function(e) {
-		if (e.button !== 0) {
-			return
-		}
+	sample.children[0].addEventListener("mouseup", e => {
+		if (e.button !== 0) { return }
 		if (deselect) {
 			if (e.ctrlKey || samples.filter(info => info.selected).length === 1) {
 				sampleInfo.selected = false
@@ -229,56 +222,26 @@ function createSample(sampleInfo, idx) {
 				lastSelectedIndex = idx
 			}
 			updateSampleListDisplay()
+			deselect = false;
 		}
 	})
 
 	setSampleContextMenu(sample, idx)
 
-	sample.children[0].ondragstart = function(event) {
-		event.preventDefault()
+	sample.children[0].addEventListener("dragstart", e => {
+		e.preventDefault()
 		ipcRenderer.send('ondragstart', returnSelectedPaths())
-	}
-
-	// play/pause on double click
-	sample.children[0].addEventListener("mouseup", function(e) {
-		if (e.detail%2 === 0) {
-			if (!samples[idx].buffer) { return }
-			if (samples[idx].audio) {
-				samples[idx].audio.stop()
-			} else {
-				for (let elem of samples) {
-					if (elem.audio) {
-						elem.audio.stop()
-					}
-				}
-
-				samples[idx].audio = audioCtx.createBufferSource()
-				samples[idx].audio.addEventListener('ended', () => {
-					if (samples[idx]) {
-						samples[idx].audio = null;
-						let sampleElement = document.getElementById(idx.toString())
-						if (sampleElement) {
-							sampleElement.children[3].children[1].src = "icons/play_circle_outline.svg"
-						}
-					}
-				})
-				samples[idx].audio.buffer = samples[idx].buffer
-				samples[idx].audio.connect(gainNode)
-				samples[idx].audio.start()
-				this.children[3].children[1].src = "icons/pause_circle_outline.svg"
-			}
-		}
 	})
 
-	sample.children[0].children[3].children[1].addEventListener("mousedown", (e) => {
+	sample.children[0].children[3].addEventListener("mousedown", e => {
 		e.preventDefault()
 		e.stopPropagation()
 	})
-
-	sample.children[0].children[3].children[1].addEventListener("mouseup", (e) => {
+	sample.children[0].children[3].addEventListener("dragstart", e => {
 		e.preventDefault()
 		e.stopPropagation()
 	})
+	sample.children[0].children[3].children[1].addEventListener("mousedown", e => { e.stopPropagation() })
 
 	sample.children[0].children[3].children[1].addEventListener("click", function(e) {
 		e.preventDefault()
@@ -287,44 +250,77 @@ function createSample(sampleInfo, idx) {
 		if (samples[idx].audio) {
 			samples[idx].audio.stop()
 		} else {
-			for (let elem of samples) {
-				if (elem.audio) {
-					elem.audio.stop()
-				}
-			}
-			let playbackBar = document.createElement('div')
-			playbackBar.classList.add('playback-marker')
-			this.parentNode.append(playbackBar)
+			let playbackMarker = document.createElement('div')
+			playbackMarker.classList.add('playback-marker')
+			this.parentNode.append(playbackMarker)
 
-			samples[idx].audio = audioCtx.createBufferSource()
-			samples[idx].audio.addEventListener('ended', () => {
-				if (samples[idx]) {
-					playbackBar.remove()
-					samples[idx].audio = null;
-					let sampleElement = document.getElementById(idx.toString())
-					if (sampleElement) {
-						sampleElement.children[3].children[1].src = "icons/play_circle_outline.svg"
+			let startPlayback = (offset) => {
+				for (let elem of samples) {
+					if (elem.audio) { elem.audio.stop() }
+				}
+
+				samples[idx].audio = audioCtx.createBufferSource()
+				samples[idx].audio.addEventListener('ended', audioEndEventListener)
+				samples[idx].audio.buffer = samples[idx].buffer
+				samples[idx].audio.connect(gainNode)
+				samples[idx].audio.start(0, offset)
+				let startTime = audioCtx.currentTime-offset
+				function movePlaybackMarker() {
+					if (playbackMarker.parentNode) {
+						let elapsed = audioCtx.currentTime - startTime
+						let length = samples[idx].duration
+						let width = playbackMarker.parentNode.children[0].offsetWidth
+						playbackMarker.style.left = elapsed/length * width + 'px'
+					}
+
+					if (samples[idx].audio) {
+						window.requestAnimationFrame(movePlaybackMarker)
 					}
 				}
-			})
-			samples[idx].audio.buffer = samples[idx].buffer
-			samples[idx].audio.connect(gainNode)
-			samples[idx].audio.start()
-			let startTime = audioCtx.currentTime
-			function movePlaybackMarker() {
-				if (playbackBar.parentNode) {
-					let elapsed = audioCtx.currentTime - startTime
-					let length = samples[idx].duration
-					let width = playbackBar.parentNode.offsetWidth
-					playbackBar.style.left = elapsed/length * width + 'px'
-				}
+				window.requestAnimationFrame(movePlaybackMarker)
+				this.src = "icons/pause_circle_outline.svg"
+			}
 
-				if (samples[idx].audio) {
-					window.requestAnimationFrame(movePlaybackMarker)
+			let scrubbing = false
+			function startScrubbing(e) {
+				scrubbing = true
+				samples[idx].audio.removeEventListener('ended', audioEndEventListener)
+				samples[idx].audio.stop()
+				samples[idx].audio = null
+			}
+
+			function scrub(e) {
+				if (scrubbing) {
+					let parentBox = playbackMarker.parentNode.children[0].getBoundingClientRect()
+					playbackMarker.style.left = Math.min(parentBox.width, Math.max(0, e.clientX-parentBox.left)) + 'px'
 				}
 			}
-			window.requestAnimationFrame(movePlaybackMarker)
-			this.src = "icons/pause_circle_outline.svg"
+
+			function stopScrubbing(e) {
+				if (scrubbing) {
+					scrubbing = false
+					let parentBox = playbackMarker.parentNode.children[0].getBoundingClientRect()
+					let offset = samples[idx].duration*Math.min(parentBox.width, Math.max(0, e.clientX-parentBox.left))/parentBox.width
+					startPlayback(offset)
+				}
+			}
+
+			let audioEndEventListener = () => {
+				if (samples[idx]) {
+					playbackMarker.parentNode.children[0].removeEventListener('mousedown', startScrubbing)
+					window.removeEventListener('mousemove', scrub)
+					window.removeEventListener('mouseup', stopScrubbing)
+					playbackMarker.remove()
+					samples[idx].audio = null;
+					this.src = "icons/play_circle_outline.svg"
+				}
+			}
+
+			playbackMarker.parentNode.children[0].addEventListener('mousedown', startScrubbing)
+			window.addEventListener('mousemove', scrub)
+			window.addEventListener('mouseup', stopScrubbing)
+
+			startPlayback(0)
 		}
 	})
 
@@ -382,14 +378,10 @@ function updateSampleListDisplay() {
 	// find first element that is below the screen
 	let end = Math.min(samples.length, Math.ceil((sampleList.scrollTop+sampleList.offsetHeight)/height))
 
-	sampleList.firstElementChild.style.height = (start*(13.5*remToPx+1)).toString() + 'px'
+	sampleList.firstElementChild.style.height = (start*height).toString() + 'px'
 	while (2 < sampleList.children.length) {
 		let index = Number(sampleList.children[1].id)
-		if (samples[index] && samples[index].filePath === sampleList.children[1].children[1].innerHTML) {
-			samples[index].DOMelem = sampleList.removeChild(sampleList.children[1])
-		} else {
-			sampleList.children[1].remove()
-		}
+		samples[index].DOMelem = sampleList.removeChild(sampleList.children[1])
 	}
 
 	for (let i = start; samples[i] && i < end; ++i) {
@@ -397,15 +389,15 @@ function updateSampleListDisplay() {
 			samples[i].decoded = true;
 			ipcRenderer.send('read-file', samples[i].filePath)
 		}
-		if (!samples[i].DOMelem) {
-			sampleList.insertBefore(createSample(samples[i], i), sampleList.lastChild)
-		} else {
+		if (samples[i].DOMelem) {
 			sampleList.insertBefore(samples[i].DOMelem, sampleList.lastChild)
 			updateSample(i)
+		} else {
+			sampleList.insertBefore(createSample(samples[i], i), sampleList.lastChild)
 		}
 	}
 
-	sampleList.lastChild.style.height = ((samples.length-end)*(13.5*remToPx+1)).toString() + 'px'
+	sampleList.lastChild.style.height = ((samples.length-end)*height).toString() + 'px'
 }
 
 function resetSampleListDisplay() {
@@ -416,7 +408,7 @@ function resetSampleListDisplay() {
 	let end = Math.min(samples.length, Math.ceil((sampleList.scrollTop+sampleList.offsetHeight)/height))
 
 	let top = document.createElement('div')
-	top.style.height = (start*(13.5*remToPx+1)).toString() + 'px'
+	top.style.height = (start*height).toString() + 'px'
 	top.style.visibility = 'hidden'
 
 	sampleList.innerHTML = ""
@@ -430,7 +422,7 @@ function resetSampleListDisplay() {
 	}
 
 	let bottom = document.createElement('div')
-	bottom.style.height = ((samples.length-end)*(13.5*remToPx+1)).toString() + 'px'
+	bottom.style.height = ((samples.length-end)*height).toString() + 'px'
 	bottom.style.visibility = 'hidden'
 	sampleList.appendChild(bottom)
 }
@@ -440,9 +432,7 @@ sampleList.addEventListener('scroll', updateSampleListDisplay)
 function updateSamples() {
 	let match = document.getElementById('searchbar-text').value
 	for (let elem of samples) {
-		if (elem.audio) {
-			elem.audio.stop()
-		}
+		if (elem.audio) { elem.audio.stop() }
 	}
 	samples = []
 	resetSampleListDisplay()
@@ -450,10 +440,8 @@ function updateSamples() {
 }
 
 ipcRenderer.on('add-sample', (e, sampleInfo) => {
-	if (new RegExp(document.getElementById('searchbar-text').value).source !== sampleInfo.match) {
-		return
-	}
-
+	if (new RegExp(document.getElementById('searchbar-text').value).source
+		!== sampleInfo.match) { return }
 	sampleInfo.selected = false
 	sampleInfo.duration = 0
 	samples.push(sampleInfo)
