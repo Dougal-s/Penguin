@@ -6,14 +6,18 @@
 /**
  * index.js
  */
-
+const { remote, ipcRenderer } = require('electron')
+const { dialog, Menu, MenuItem } = remote
 
 const sidebar = document.getElementById('sidebar')
 const mainPanel = document.getElementById('main-panel')
 
 const drag = document.getElementById('drag')
 
-let resizing = false;
+let tagInfos = []
+
+// Resizing sidepanel
+let resizing = false
 
 drag.addEventListener('mousedown', e => { resizing = true })
 
@@ -35,6 +39,8 @@ window.addEventListener('mousemove', e => {
 })
 
 window.addEventListener('mouseup', e => { resizing = false })
+
+// Categories
 
 const categoryTemplate = document.getElementById('template-category')
 function createEmptyCategoryElement() {
@@ -112,25 +118,107 @@ ipcRenderer.once('categories', (event, categories) => {
 })
 ipcRenderer.send('getCategories')
 
+// Tags
+
+const tagSearchBar = document.getElementById('tag-search-bar')
+const addTagBtn = document.getElementById('add-tag-button')
 const tagList = document.getElementById('tags')
 const tagTemplate = document.getElementById('template-tag')
 Object.freeze(tagTemplate)
-function createTagElement(tagName) {
-	const tag = tagTemplate.content.cloneNode(true)
-	tag.children[0].innerHTML = tagName
+tagSearchBar.children[0].addEventListener('input', (e) => {
+	while (tagList.children.length > 1) { tagList.firstElementChild.remove() }
+	for (const tag of tagInfos) {
+		if (tag.name.includes(e.target.value)) { createTagElement(tag) }
+	}
+})
 
-	tag.children[0].addEventListener("click", function(){
-		if (this.classList.contains("selected-tag")) this.classList.remove("selected-tag")
-		else this.classList.add("selected-tag")
+function createEmptyTagElement() {
+	const tag = tagTemplate.content.cloneNode(true)
+	tag.children[0].id = "new-tag"
+	const name = document.createElement("input")
+	name.type = "text"
+	function checkForDeselect(e) {
+		if (e.target !== name) {
+			if (name.parentNode) { name.parentNode.remove() }
+			window.removeEventListener("click", checkForDeselect)
+		}
+	}
+	window.addEventListener("click", checkForDeselect)
+	name.addEventListener("input", (e) => {
+		name.style.width = name.value.length + 'ch'
+		name.parentNode.style.width = name.value.length + 'ch'
 	})
-	tagList.appendChild(tag)
+	name.addEventListener("change", (e) => {
+		if (e.target.value) {
+			// Check if the tag already exists
+			if (tagInfos.some(tagInfo => tagInfo.name === e.target.value)) {
+				e.target.parentNode.classList.add("invalid-name")
+				e.target.focus()
+				return
+			}
+			tagInfos.push(Object.freeze({
+				name: e.target.value,
+				selected: false
+			}))
+			createTagElement(tagInfos[tagInfos.length-1])
+			ipcRenderer.send("addTag", e.target.value)
+		}
+		e.target.parentNode.remove()
+		window.removeEventListener("click", checkForDeselect)
+	})
+	tag.children[0].appendChild(name)
+	tagList.insertBefore(tag.children[0], addTagBtn).children[0].focus()
 }
 
-createTagElement("Dark")
-createTagElement("Darker")
-createTagElement("Darkest")
-createTagElement("Darkerest")
-createTagElement("for debug purposes")
+addTagBtn.addEventListener("click", (e) => {
+	createEmptyTagElement(e)
+	e.stopPropagation()
+})
+
+function createTagElement(tagInfo) {
+	const tag = tagTemplate.content.cloneNode(true)
+	tag.children[0].innerHTML = tagInfo.name
+
+	if (tagInfo.selected) { tag.children[0].classList.add("selected-tag") }
+
+	tag.children[0].addEventListener("click", function(){
+		tagInfo.selected = !tagInfo.selected
+		if (tagInfo.selected) this.classList.add("selected-tag")
+		else this.classList.remove("selected-tag")
+	})
+
+	const tagMenu = Menu.buildFromTemplate([
+		{
+			label: "remove tag",
+			click() {
+				[...tagList.children].find(elem => elem.innerHTML === tagInfo.name).remove()
+				ipcRenderer.send("removeTag", tagInfo.name)
+				tagInfos.splice(tagInfos.indexOf(tagInfo), 1)
+			}
+		}
+	])
+
+	tag.children[0].addEventListener("contextmenu", (e) => {
+		tagMenu.popup({window: remote.getCurrentWindow()})
+		e.preventDefault()
+		e.stopPropagation()
+	})
+
+	tagList.insertBefore(tag, addTagBtn)
+}
+
+function getSelectedTags() { return tagInfos.filter(tag => tag.selected) }
+
+ipcRenderer.once('tags', (event, tags) => {
+	for (const tag of tags) {
+		tagInfos.push(Object.seal({
+			name: tag,
+			selected: false
+		}))
+		createTagElement(tagInfos[tagInfos.length-1])
+	}
+})
+ipcRenderer.send('getTags')
 
 const settings = document.getElementById('settings')
 const settingsIcon = document.getElementById('settings-icon')

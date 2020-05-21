@@ -62,6 +62,26 @@ ipcMain.on('removeCategory', (event, category) => {
 	})
 })
 
+ipcMain.once('getTags', (event) => {
+	event.sender.send('tags', settings.tags)
+})
+
+ipcMain.on('addTag', (event, tag) => {
+	settings.tags.push(tag)
+	fs.writeFile('settings.json', JSON.stringify(settings, null, '\t'), function(e) {
+		if (e) return console.log(e)
+		console.log('added tag \'' + tag + '\' to \'settings.json\'')
+	})
+})
+
+ipcMain.on('removeTag', (event, tag) => {
+	settings.tags.splice(settings.tags.indexOf(tag), 1)
+	fs.writeFile('settings.json', JSON.stringify(settings, null, '\t'), function(e) {
+		if (e) return console.log(e)
+		console.log('removed tag \'' + tag + '\' in \'settings.json\'')
+	})
+})
+
 ipcMain.once('getSampleDirectories', (event) => {
 	event.sender.send('sampleDirectories', settings.sampleDirectories)
 })

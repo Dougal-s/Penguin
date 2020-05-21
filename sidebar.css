@@ -71,6 +71,7 @@
 
 #categories > li:last-child {
     padding: 0.25rem 0;
+    height: 1.4375rem;
     text-align: center;
 }
 
@@ -89,6 +90,41 @@
 #selected-category {
     background-color: var(--bg-color-2);
     box-shadow: 0 0 20px #00000080;
+}
+
+#sidebar-content > #tag-title {
+    margin-bottom: 1rem;
+}
+
+#tag-search-bar {
+    display: flex;
+    margin: 0 2rem 1.25rem;
+    position: relative;
+    background-color: var(--bg-color-0);
+    border: 0.125rem var(--bg-color-0) solid;
+    border-radius: 0.125rem;
+    box-sizing: content-box;
+}
+
+#tag-search-bar > input {
+    flex: auto;
+    color: var(--text-color-3);
+
+    display: block;
+    height: 1.1875rem;
+    padding: 0;
+    padding-left: 0.5rem;
+    border: none;
+    background-color: transparent;
+    box-sizing: content-box;
+    min-width: 4rem;
+}
+
+#tag-search-bar > svg {
+    flex: none;
+    fill: var(--text-color-3);
+    height: 1.1875rem;
+    margin-right: 0.125rem;
 }
 
 #tags {
@@ -119,6 +155,45 @@
 
 #tags > li:hover {
     cursor: pointer;
+}
+
+#tags > li:last-child {
+    flex: none;
+    height: 0.95rem;
+    width: 0.95rem;
+}
+
+#tags > li:last-child > svg {
+    display: inline-block;
+    height: 0.95rem;
+    width: 0.95rem;
+    fill: var(--text-color-4)
+}
+
+#tags > li:last-child:hover > svg {
+    fill: var(--text-color-5)
+}
+
+#tags > #new-tag {
+    text-overflow: clip;
+}
+
+#tags > #new-tag > input {
+    width: 1ch;
+    border: none;
+    padding: 0;
+    margin: 0;
+    background-color: transparent;
+    color: var(--text-color-4);
+    font-family: Roboto;
+}
+
+#tags > #new-tag.invalid-name {
+    background-color: red;
+}
+
+#tags > #new-tag.invalid-name > input {
+    color: var(--text-color-1);
 }
 
 #tags > .selected-tag {

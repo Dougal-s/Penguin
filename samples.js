@@ -1,6 +1,3 @@
-const { remote, ipcRenderer } = require('electron')
-const { dialog, Menu, MenuItem } = remote
-
 const remToPx = rem => rem*parseFloat(getComputedStyle(document.documentElement).fontSize)
 
 const audioCtx = new window.AudioContext
@@ -55,8 +52,8 @@ function drawWaveform(canvas, path) {
 }
 
 function removeTag(tagList, idx, tag) {
-	const selectedTags = document.getElementsByClassName('selected-tag')
-	if (Array.from(selectedTags).some(tagElem => tagElem.innerHTML === tag)) {
+	const selectedTags = getSelectedTags()
+	if (selectedTags.some(tagInfo => tagInfo.name === tag)) {
 		sample = tagList.parentNode.parentNode
 		sample.remove()
 		samples.splice(idx, 1)
