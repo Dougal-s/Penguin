@@ -1,6 +1,6 @@
-sampleDirs = document.getElementById('sample-dirs')
-const templateSampleDir = document.getElementById('template-sample-dir')
-const addSampleDirBtn = document.getElementById('add-dir')
+sampleDirs = document.getElementById("sample-dirs")
+const templateSampleDir = document.getElementById("template-sample-dir")
+const addSampleDirBtn = document.getElementById("add-dir")
 
 function getSamplePaths() {
     const paths = []
@@ -13,8 +13,8 @@ function createSampleDir(path) {
     const sampleDir = templateSampleDir.content.cloneNode(true)
     sampleDir.children[0].children[0].value = path
 
-    sampleDir.children[0].children[0].addEventListener('change', (e) => {
-        e.target.classList.remove('error')
+    sampleDir.children[0].children[0].addEventListener("change", (e) => {
+        e.target.classList.remove("error")
         if (e.target.value === "") {
             if (sampleDirs.children.length === 1) {
                 e.target.focus()
@@ -24,41 +24,41 @@ function createSampleDir(path) {
         }
 
         try {
-            const fs = remote.require('fs')
+            const fs = remote.require("fs")
             stat = fs.statSync(e.target.value)
             if (!stat.isDirectory()) {
-                e.target.classList.add('error')
+                e.target.classList.add("error")
                 e.target.focus()
                 return
             }
         } catch (err) {
-            e.target.classList.add('error')
+            e.target.classList.add("error")
             e.target.focus()
             return
         }
 
-        ipcRenderer.sendSync('updateSampleDirs', getSamplePaths())
+        ipcRenderer.sendSync("updateSampleDirs", getSamplePaths())
         updateSamples()
     })
 
-    sampleDir.children[0].children[1].addEventListener('click', (e) => {
-        e.target.parentNode.children[0].classList.remove('error')
-        const path = dialog.showOpenDialogSync({ properties: ['openDirectory'] })
+    sampleDir.children[0].children[1].addEventListener("click", (e) => {
+        e.target.parentNode.children[0].classList.remove("error")
+        const path = dialog.showOpenDialogSync({ properties: ["openDirectory"] })
         if (!path) return
         e.target.parentNode.children[0].value = path
 
-        ipcRenderer.sendSync('updateSampleDirs', getSamplePaths())
+        ipcRenderer.sendSync("updateSampleDirs", getSamplePaths())
         updateSamples()
     })
 
     sampleDirs.append(sampleDir)
 }
 
-addSampleDirBtn.addEventListener('click', (e) => {
-    createSampleDir('')
+addSampleDirBtn.addEventListener("click", (e) => {
+    createSampleDir("")
 })
 
-ipcRenderer.once('sampleDirectories', (event, sampleDirectories) => {
+ipcRenderer.once("sampleDirectories", (event, sampleDirectories) => {
     for (const dir of sampleDirectories) { createSampleDir(dir) }
 })
-ipcRenderer.send('getSampleDirectories')
+ipcRenderer.send("getSampleDirectories")

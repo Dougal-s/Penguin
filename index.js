@@ -1,48 +1,48 @@
 /**
  * Debugging
  */
-//window.addEventListener('mousedown', e => {console.log(e.target)})
+//window.addEventListener("mousedown", e => {console.log(e.target)})
 
 /**
  * index.js
  */
-const { remote, ipcRenderer } = require('electron')
+const { remote, ipcRenderer } = require("electron")
 const { dialog, Menu, MenuItem } = remote
 
-const sidebar = document.getElementById('sidebar')
-const mainPanel = document.getElementById('main-panel')
+const sidebar = document.getElementById("sidebar")
+const mainPanel = document.getElementById("main-panel")
 
-const drag = document.getElementById('drag')
+const drag = document.getElementById("drag")
 
 let tagInfos = []
 
 // Resizing sidepanel
 let resizing = false
 
-drag.addEventListener('mousedown', e => { resizing = true })
+drag.addEventListener("mousedown", e => { resizing = true })
 
-window.addEventListener('mousemove', e => {
+window.addEventListener("mousemove", e => {
 	if (resizing) {
 		const compactWidth = remToPx(3);
 		let size = Math.min(Math.max(e.clientX, remToPx(15)), window.innerWidth-remToPx(20));
 		if (e.clientX < compactWidth) {
-			sidebar.setAttribute('compact', "true")
+			sidebar.setAttribute("compact", "true")
 			size = compactWidth;
 		} else {
-			sidebar.setAttribute('compact', "false")
+			sidebar.setAttribute("compact", "false")
 		}
 
-		sidebar.style.width = size+'px'
-		mainPanel.style.left = size+'px'
-		drag.style.left = size+'px'
+		sidebar.style.width = size + "px"
+		mainPanel.style.left = size + "px"
+		drag.style.left = size + "px"
 	}
 })
 
-window.addEventListener('mouseup', e => { resizing = false })
+window.addEventListener("mouseup", e => { resizing = false })
 
 // Categories
 
-const categoryTemplate = document.getElementById('template-category')
+const categoryTemplate = document.getElementById("template-category")
 function createEmptyCategoryElement() {
 	const category = categoryTemplate.content.cloneNode(true)
 	category.children[0].id = "new-category"
@@ -75,13 +75,13 @@ function createEmptyCategoryElement() {
 	categoryList.insertBefore(category.children[0], addCategoryBtn).children[0].focus()
 }
 
-const addCategoryBtn = document.getElementById('add-category')
-addCategoryBtn.addEventListener('click', (e) => {
+const addCategoryBtn = document.getElementById("add-category")
+addCategoryBtn.addEventListener("click", (e) => {
 	createEmptyCategoryElement()
 	e.stopPropagation()
 })
 
-const categoryList = document.getElementById('categories')
+const categoryList = document.getElementById("categories")
 Object.freeze(categoryTemplate)
 function createCategoryElement(categoryName) {
 	const category = categoryTemplate.content.cloneNode(true)
@@ -101,11 +101,11 @@ function createCategoryElement(categoryName) {
 		label: "remove category",
 		click() {
 			[...categoryList.children].find(elem => elem.innerHTML === categoryName).remove()
-			ipcRenderer.send('removeCategory', categoryName)
+			ipcRenderer.send("removeCategory", categoryName)
 		}
 	}])
 
-	category.children[0].addEventListener('contextmenu', (e) => {
+	category.children[0].addEventListener("contextmenu", (e) => {
 		categoryMenu.popup({ window: remote.getCurrentWindow() })
 		e.preventDefault()
 		e.stopPropagation()
@@ -113,19 +113,19 @@ function createCategoryElement(categoryName) {
 	categoryList.insertBefore(category, addCategoryBtn)
 }
 
-ipcRenderer.once('categories', (event, categories) => {
+ipcRenderer.once("categories", (event, categories) => {
 	for (const category of categories) { createCategoryElement(category) }
 })
-ipcRenderer.send('getCategories')
+ipcRenderer.send("getCategories")
 
 // Tags
 
-const tagSearchBar = document.getElementById('tag-search-bar')
-const addTagBtn = document.getElementById('add-tag-button')
-const tagList = document.getElementById('tags')
-const tagTemplate = document.getElementById('template-tag')
+const tagSearchBar = document.getElementById("tag-search-bar")
+const addTagBtn = document.getElementById("add-tag-button")
+const tagList = document.getElementById("tags")
+const tagTemplate = document.getElementById("template-tag")
 Object.freeze(tagTemplate)
-tagSearchBar.children[0].addEventListener('input', (e) => {
+tagSearchBar.children[0].addEventListener("input", (e) => {
 	while (tagList.children.length > 1) { tagList.firstElementChild.remove() }
 	for (const tag of tagInfos) {
 		if (tag.name.includes(e.target.value)) { createTagElement(tag) }
@@ -145,8 +145,8 @@ function createEmptyTagElement() {
 	}
 	window.addEventListener("click", checkForDeselect)
 	name.addEventListener("input", (e) => {
-		name.style.width = name.value.length + 'ch'
-		name.parentNode.style.width = name.value.length + 'ch'
+		name.style.width = name.value.length + "ch"
+		name.parentNode.style.width = name.value.length + "ch"
 	})
 	name.addEventListener("change", (e) => {
 		if (e.target.value) {
@@ -209,7 +209,7 @@ function createTagElement(tagInfo) {
 
 function getSelectedTags() { return tagInfos.filter(tag => tag.selected) }
 
-ipcRenderer.once('tags', (event, tags) => {
+ipcRenderer.once("tags", (event, tags) => {
 	for (const tag of tags) {
 		tagInfos.push(Object.seal({
 			name: tag,
@@ -218,35 +218,35 @@ ipcRenderer.once('tags', (event, tags) => {
 		createTagElement(tagInfos[tagInfos.length-1])
 	}
 })
-ipcRenderer.send('getTags')
+ipcRenderer.send("getTags")
 
-const settings = document.getElementById('settings')
-const settingsIcon = document.getElementById('settings-icon')
-const closeSettingsBtn = document.getElementById('close-settings')
-closeSettingsBtn.addEventListener('click', () => {
+const settings = document.getElementById("settings")
+const settingsIcon = document.getElementById("settings-icon")
+const closeSettingsBtn = document.getElementById("close-settings")
+closeSettingsBtn.addEventListener("click", () => {
 	settings.style.display = "none";
 })
-settingsIcon.addEventListener('click', () => {
+settingsIcon.addEventListener("click", () => {
 	settings.style.display = "block";
 })
 
 let gainSliderMoving = false;
 
-const gainSlider = document.getElementById('gain-slider')
-const gainSliderThumb = document.getElementById('gain-slider-thumb')
-const gainSliderTrail = document.getElementById('gain-slider-trail')
+const gainSlider = document.getElementById("gain-slider")
+const gainSliderThumb = document.getElementById("gain-slider-thumb")
+const gainSliderTrail = document.getElementById("gain-slider-trail")
 
-gainSlider.addEventListener('mousedown', e => { gainSliderMoving = true })
+gainSlider.addEventListener("mousedown", e => { gainSliderMoving = true })
 
-window.addEventListener('mousemove', e => {
+window.addEventListener("mousemove", e => {
 	if (gainSliderMoving) {
 		const boundingBox = gainSlider.getBoundingClientRect()
 		const dx = Math.min(Math.max(e.clientX-boundingBox.left, 0), boundingBox.width);
-		gainSliderThumb.style.left = dx + 'px'
-		gainSliderTrail.style.width = dx + 'px'
+		gainSliderThumb.style.left = dx + "px"
+		gainSliderTrail.style.width = dx + "px"
 		const gain = 12*4*(dx/boundingBox.width-0.75)
 		gainNode.gain.value = Math.pow(10, gain/20)
 	}
 })
 
-window.addEventListener('mouseup', e => { gainSliderMoving = false })
+window.addEventListener("mouseup", e => { gainSliderMoving = false })
