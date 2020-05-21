@@ -14,6 +14,13 @@ const sampleList = document.getElementById('sample-list')
 const sampleTemplate = document.getElementById('template-sample')
 Object.freeze(sampleTemplate)
 
+const searchBar = document.getElementById('searchbar-text');
+searchBar.addEventListener('input', updateSamples);
+document.getElementById('delete-icon').addEventListener("click", () => {
+	searchBar.value = ""
+	updateSamples()
+})
+
 function returnSelectedPaths() {
 	return Array.from(samples.filter(info => info.selected), x => x.filePath)
 }

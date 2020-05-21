@@ -34,15 +34,7 @@ window.addEventListener('mousemove', e => {
 	}
 })
 
-
 window.addEventListener('mouseup', e => { resizing = false })
-
-const searchBar = document.getElementById('searchbar-text');
-searchBar.addEventListener('input', updateSamples);
-document.getElementById('delete-icon').addEventListener("click", () => {
-	searchBar.value = ""
-	updateSamples()
-})
 
 const categoryTemplate = document.getElementById('template-category')
 function createEmptyCategoryElement() {
@@ -99,7 +91,7 @@ function createCategoryElement(categoryName) {
 		this.id = "selected-category"
 	})
 
-	const sampleMenu = Menu.buildFromTemplate([{
+	const categoryMenu = Menu.buildFromTemplate([{
 		label: "remove category",
 		click() {
 			[...categoryList.children].find(elem => elem.innerHTML === categoryName).remove()
@@ -108,7 +100,7 @@ function createCategoryElement(categoryName) {
 	}])
 
 	category.children[0].addEventListener('contextmenu', (e) => {
-		sampleMenu.popup({ window: remote.getCurrentWindow() })
+		categoryMenu.popup({ window: remote.getCurrentWindow() })
 		e.preventDefault()
 		e.stopPropagation()
 	})
