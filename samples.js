@@ -6,6 +6,8 @@ gainNode.gain.value = 1
 gainNode.connect(audioCtx.destination)
 
 let samples = []
+// for storing samples which do not match the tags or categories
+let hiddenSamples = []
 
 const sampleList = document.getElementById("sample-list")
 const sampleTemplate = document.getElementById("template-sample")
@@ -443,8 +445,40 @@ function updateSamples() {
 		if (elem.audio) { elem.audio.stop() }
 	}
 	samples = []
+	hiddenSamples = []
 	resetSampleListDisplay()
 	ipcRenderer.send("update-samples", match, getSelectedTags(), getSelectedCategories())
+}
+
+// called when a tag or category is selected/deselected
+function passesFilter(sampleInfo, filter) {
+	for (const tag of filter.tags) {
+		if (!sampleInfo.tags.includes(tag)) { return false }
+	}
+	if (!filter.categories.length) { return true }
+	for (const category of sampleInfo.categories) {
+		if (filter.categories.includes(category)) {
+			return true
+		}
+	}
+
+	return false
+}
+
+function filterUpdate() {
+	const filter = Object.freeze({
+		tags: getSelectedTags(),
+		categories: getSelectedCategories()
+	})
+	hiddenSamples = [...hiddenSamples, ...samples]
+	samples = []
+	for (let i = 0; i < hiddenSamples.length; ++i) {
+		if (passesFilter(hiddenSamples[i], filter)) {
+			samples.push(hiddenSamples.splice(i, 1)[0])
+			--i
+		}
+	}
+	resetSampleListDisplay()
 }
 
 ipcRenderer.on("add-sample", (e, sampleInfo) => {

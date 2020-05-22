@@ -102,7 +102,7 @@ function createCategoryElement(categoryName) {
 			for (const elem of categoryList.children) { elem.id = "" }
 			this.id = "selected-category"
 		}
-		updateSamples()
+		filterUpdate()
 	})
 
 	const categoryMenu = Menu.buildFromTemplate([{
@@ -212,7 +212,7 @@ function createTagElement(tagInfo) {
 		tagInfo.selected = !tagInfo.selected
 		if (tagInfo.selected) this.classList.add("selected-tag")
 		else this.classList.remove("selected-tag")
-		updateSamples()
+		filterUpdate()
 	})
 
 	const tagMenu = Menu.buildFromTemplate([

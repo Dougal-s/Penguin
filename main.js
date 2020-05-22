@@ -126,7 +126,7 @@ function isAudioFile(fileName) {
 }
 
 let walkCount = 0;
-function walk(dir, filter, walkId) {
+function walk(dir, match, walkId) {
 	if (walkId !== walkCount) return
 	fs.readdir(dir, (e, files) => {
 		for (const file of files) {
@@ -134,32 +134,21 @@ function walk(dir, filter, walkId) {
 
 			fs.stat(filePath, (e, stats) => {
 				if (stats.isDirectory()) {
-					walk(filePath, filter, walkId)
+					walk(filePath, match, walkId)
 					return
 				}
 
 				if (!isAudioFile(filePath)) return
 
-				if (!filter.match || filter.match.test(path.basename(filePath))) {
+				if (!match || match.test(path.basename(filePath))) {
 					db.get(`SELECT tags from files where sample_path = ${filePath}`, (err, row) => {
 						const sampleCategories = row ? row.categories.split(",") : [];
 						const sampleTags = row ? row.tags.split(",") : [];
-						let inCategory = false
-						for (const category of sampleCategories) {
-							if (filter.categories.includes(category)) {
-								inCategory = true
-								break;
-							}
-						}
-						if (filter.categories.length && !inCategory) { return }
-						for (const tag of filter.tags) {
-							if (!sampleTags.includes(tag)) { return }
-						}
 						window.send("add-sample", {
 							filePath: filePath,
 							categories: sampleCategories,
 							tags: sampleTags,
-							match: filter.match.source
+							match: match.source
 						})
 					})
 				}
@@ -186,13 +175,9 @@ ipcMain.on("update-sample-info", (event, updateInfo) => {
 	`)
 })
 
-ipcMain.on("update-samples", (event, match, tags, categories) => {
-	const filter = Object.freeze({
-		match: new RegExp(match, "i"),
-		categories: categories,
-		tags: tags
-	})
-	for (const dir of settings.sampleDirectories) walk(dir, filter, ++walkCount)
+ipcMain.on("update-samples", (event, match) => {
+	const regex = Object.freeze(new RegExp(match, "i"))
+	for (const dir of settings.sampleDirectories) walk(dir, regex, ++walkCount)
 })
 
 ipcMain.on("read-file", (event, filePath) => {
