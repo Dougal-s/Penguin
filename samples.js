@@ -119,6 +119,13 @@ function setSampleContextMenu(sample, idx) {
 	const tagList = sample.getElementsByClassName("tag-list")[0]
 	const menuTemplate = [
 		{
+			label: samples[idx].filePath.split("\\").pop().split("/").pop(),
+			enabled: false
+		},
+		{
+			type: "separator"
+		},
+		{
 			label: "remove from selected category",
 			click() {
 				const category = document.getElementById("selected-category")
