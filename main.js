@@ -2,6 +2,25 @@
 const {app, BrowserWindow, ipcMain} = require("electron")
 const fs = require("fs")
 const path = require("path")
+const sqlite3 = require('sqlite3')
+const db = new sqlite3.Database(
+	"./files.sqlite3",
+	sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
+	(e) => {
+		if (e) {
+			throw "failed to open sqlite3 database!: " + e
+		}
+
+		db.run(`
+			CREATE TABLE IF NOT EXISTS files(
+				sample_path TEXT PRIMARY KEY,
+				categories TEXT,
+				tags TEXT
+			) WITHOUT ROWID
+		`)
+	}
+)
+
 
 const settings = require("./settings.json")
 
@@ -32,6 +51,10 @@ app.on("window-all-closed", () => {
 
 app.on("activate", () => {
 	if (BrowserWindow.getAllWindows().length === 0) createWindow()
+})
+
+app.on("quit", () => {
+	db.close()
 })
 
 
@@ -103,7 +126,7 @@ function isAudioFile(fileName) {
 }
 
 let walkCount = 0;
-function walk(dir, match, walkId) {
+function walk(dir, filter, walkId) {
 	if (walkId !== walkCount) return
 	fs.readdir(dir, (e, files) => {
 		for (const file of files) {
@@ -111,18 +134,33 @@ function walk(dir, match, walkId) {
 
 			fs.stat(filePath, (e, stats) => {
 				if (stats.isDirectory()) {
-					walk(filePath, match, walkId)
+					walk(filePath, filter, walkId)
 					return
 				}
 
 				if (!isAudioFile(filePath)) return
 
-				if (!match || match.test(path.basename(filePath))) {
-					window.send("add-sample", {
-						filePath: filePath,
-						categories: ["A debug category"],
-						tags: ["for debug purposes"],
-						match: match.source
+				if (!filter.match || filter.match.test(path.basename(filePath))) {
+					db.get(`SELECT tags from files where sample_path = ${filePath}`, (err, row) => {
+						const sampleCategories = row ? row.categories.split(",") : [];
+						const sampleTags = row ? row.tags.split(",") : [];
+						let inCategory = false
+						for (const category of sampleCategories) {
+							if (filter.categories.includes(category)) {
+								inCategory = true
+								break;
+							}
+						}
+						if (filter.categories.length && !inCategory) { return }
+						for (const tag of filter.tags) {
+							if (!sampleTags.includes(tag)) { return }
+						}
+						window.send("add-sample", {
+							filePath: filePath,
+							categories: sampleCategories,
+							tags: sampleTags,
+							match: filter.match.source
+						})
 					})
 				}
 			})
@@ -130,9 +168,31 @@ function walk(dir, match, walkId) {
 	})
 }
 
-ipcMain.on("update-samples", (event, match) => {
-	const regex = new RegExp(match, "i")
-	for (const dir of settings.sampleDirectories) walk(dir, regex, ++walkCount)
+/**
+ * updateInfo fields:
+ *   samplePath: path to the sample
+ *   updateTarget: name of the field to update
+ *   updateData: new field value
+ */
+ipcMain.on("update-sample-info", (event, updateInfo) => {
+	const data = updateInfo.updateData.join(",")
+	db.run(`
+		INSERT INTO files (sample_path, ${updateInfo.updateTarget})
+		VALUES
+			(${updateInfo.samplePath}, ${data})
+		ON DUPLICATE KEY
+		UPDATE files SET ${updateInfo.updateTarget} = ${data}
+		WHERE sample_path = ${updateInfo.samplePath}
+	`)
+})
+
+ipcMain.on("update-samples", (event, match, tags, categories) => {
+	const filter = Object.freeze({
+		match: new RegExp(match, "i"),
+		categories: categories,
+		tags: tags
+	})
+	for (const dir of settings.sampleDirectories) walk(dir, filter, ++walkCount)
 })
 
 ipcMain.on("read-file", (event, filePath) => {

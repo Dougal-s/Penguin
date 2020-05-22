@@ -61,6 +61,11 @@ function removeTag(tagList, idx, tag) {
 		return
 	}
 	samples[idx].tags.splice(samples[idx].tags.indexOf(tag), 1)
+	ipcRenderer.send("update-sample-info", {
+		samplePath: samples[idx].filePath,
+		updateTarget: "tags",
+		updateData: samples[idx].tags
+	})
 	Array.from(tagList.children).find(elem => elem.innerHTML === tag).remove()
 	setSampleContextMenu(tagList.parentElement.parentElement, idx)
 }
@@ -100,6 +105,11 @@ function removeCategory(sample, idx, category) {
 	}
 
 	samples[idx].categories.splice(samples[idx].categories.indexOf(category), 1)
+	ipcRenderer.send("update-sample-info", {
+		samplePath: samples[idx].filePath,
+		updateTarget: "categories",
+		updateData: samples[idx].categories
+	})
 	setSampleContextMenu(sample, idx)
 }
 
@@ -434,7 +444,7 @@ function updateSamples() {
 	}
 	samples = []
 	resetSampleListDisplay()
-	ipcRenderer.send("update-samples", match)
+	ipcRenderer.send("update-samples", match, getSelectedTags(), getSelectedCategories())
 }
 
 ipcRenderer.on("add-sample", (e, sampleInfo) => {

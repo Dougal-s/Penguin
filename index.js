@@ -41,6 +41,17 @@ window.addEventListener("mousemove", e => {
 window.addEventListener("mouseup", e => { resizing = false })
 
 // Categories
+function validCategoryName(name) {
+	// Check if the category already exists
+	if ([...categoryList.children].some(elem => elem.innerHTML === name)) {
+		return false
+	}
+
+	// Commas are used as separators in the database
+	if (name.includes(",")) { return false }
+
+	return true
+}
 
 const categoryTemplate = document.getElementById("template-category")
 function createEmptyCategoryElement() {
@@ -57,10 +68,7 @@ function createEmptyCategoryElement() {
 	window.addEventListener("click", checkForDeselect)
 	name.addEventListener("change", (e) => {
 		if (e.target.value) {
-			// Check if the category already exists
-			if ([...categoryList.children].some(
-				elem => elem !== e.target && elem.innerHTML === e.target.value)
-			) {
+			if (validCategoryName(e.target.value)) {
 				e.target.style.borderColor = "red"
 				e.target.focus()
 				return
@@ -90,11 +98,11 @@ function createCategoryElement(categoryName) {
 	category.children[0].addEventListener("click", function(){
 		if (this.id === "selected-category") {
 			this.id = ""
-			return
+		} else {
+			for (const elem of categoryList.children) { elem.id = "" }
+			this.id = "selected-category"
 		}
-
-		for (const elem of categoryList.children) { elem.id = "" }
-		this.id = "selected-category"
+		updateSamples()
 	})
 
 	const categoryMenu = Menu.buildFromTemplate([{
@@ -111,6 +119,14 @@ function createCategoryElement(categoryName) {
 		e.stopPropagation()
 	})
 	categoryList.insertBefore(category, addCategoryBtn)
+}
+
+function getSelectedCategories() {
+	const selectedCategory = document.getElementById("selected-category")
+	if (selectedCategory) {
+		return [selectedCategory.innerHTML]
+	}
+	return []
 }
 
 ipcRenderer.once("categories", (event, categories) => {
@@ -132,6 +148,18 @@ tagSearchBar.children[0].addEventListener("input", (e) => {
 	}
 })
 
+function validTagName(name) {
+	// Check if the tag already exists
+	if (tagInfos.some(tagInfo => tagInfo.name === name)) {
+		return false
+	}
+
+	// Commas are used as separators in the database
+	if (name.includes(",")) { return false }
+
+	return true
+}
+
 function createEmptyTagElement() {
 	const tag = tagTemplate.content.cloneNode(true)
 	tag.children[0].id = "new-tag"
@@ -150,8 +178,7 @@ function createEmptyTagElement() {
 	})
 	name.addEventListener("change", (e) => {
 		if (e.target.value) {
-			// Check if the tag already exists
-			if (tagInfos.some(tagInfo => tagInfo.name === e.target.value)) {
+			if (validTagName(e.target.value)) {
 				e.target.parentNode.classList.add("invalid-name")
 				e.target.focus()
 				return
@@ -185,6 +212,7 @@ function createTagElement(tagInfo) {
 		tagInfo.selected = !tagInfo.selected
 		if (tagInfo.selected) this.classList.add("selected-tag")
 		else this.classList.remove("selected-tag")
+		updateSamples()
 	})
 
 	const tagMenu = Menu.buildFromTemplate([
