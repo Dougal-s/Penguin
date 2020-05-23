@@ -53,6 +53,47 @@ function drawWaveform(canvas, path) {
 	ctx.stroke(path.path)
 }
 
+const templateTag = document.getElementById("template-tag")
+Object.freeze(templateTag)
+function createSampleTagElement(tagList, idx, tag) {
+	const tagElem = templateTag.content.cloneNode(true)
+	tagElem.children[0].innerHTML = tag
+
+	const sampleMenu = Menu.buildFromTemplate([{
+		label: "remove tag",
+		click() { removeTag(tagList, idx, tag) }
+	}])
+
+	tagElem.children[0].addEventListener("mousedown", e => { e.stopPropagation() })
+
+	tagElem.children[0].addEventListener("contextmenu", (e) => {
+		sampleMenu.popup({ window: remote.getCurrentWindow() })
+		e.preventDefault()
+		e.stopPropagation()
+	})
+
+	tagList.appendChild(tagElem)
+}
+
+function setSampleTags(tagList, idx) {
+	tagList.innerHTML = ""
+	for (const tag of samples[idx].tags) {
+		createSampleTagElement(tagList, idx, tag)
+	}
+}
+
+function addTag(tagList, idx, tag) {
+	if (samples[idx].tags.includes(tag)) { return }
+	samples[idx].tags.push(tag)
+	ipcRenderer.send("update-sample-info", {
+		samplePath: samples[idx].filePath,
+		updateTarget: "tags",
+		updateData: samples[idx].tags
+	})
+	createSampleTagElement(tagList, idx, tag)
+	setSampleContextMenu(tagList.parentElement.parentElement, idx)
+}
+
 function removeTag(tagList, idx, tag) {
 	const selectedTags = getSelectedTags()
 	if (selectedTags.some(tagInfo => tagInfo.name === tag)) {
@@ -72,29 +113,16 @@ function removeTag(tagList, idx, tag) {
 	setSampleContextMenu(tagList.parentElement.parentElement, idx)
 }
 
-const templateTag = document.getElementById("template-tag")
-Object.freeze(templateTag)
-function setSampleTags(tagList, idx) {
-	tagList.innerHTML = ""
-	for (const tag of samples[idx].tags) {
-		const tagElem = templateTag.content.cloneNode(true)
-		tagElem.children[0].innerHTML = tag
+function addCategory(sample, idx, category) {
+	if (samples[idx].categories.includes(category)) { return }
 
-		const sampleMenu = Menu.buildFromTemplate([{
-			label: "remove tag",
-			click() { removeTag(tagList, idx, tag) }
-		}])
-
-		tagElem.children[0].addEventListener("mousedown", e => { e.stopPropagation() })
-
-		tagElem.children[0].addEventListener("contextmenu", (e) => {
-			sampleMenu.popup({ window: remote.getCurrentWindow() })
-			e.preventDefault()
-			e.stopPropagation()
-		})
-
-		tagList.appendChild(tagElem)
-	}
+	samples[idx].categories.push(category)
+	ipcRenderer.send("update-sample-info", {
+		samplePath: samples[idx].filePath,
+		updateTarget: "categories",
+		updateData: samples[idx].categories
+	})
+	setSampleContextMenu(sample, idx)
 }
 
 function removeCategory(sample, idx, category) {
@@ -134,10 +162,28 @@ function setSampleContextMenu(sample, idx) {
 		},
 		{
 			type: "submenu",
+			label: "add to categories",
+			submenu: [...categoryList.children].filter(category => category.children.length === 0).map(category => ({
+				label: category.innerHTML,
+				click() { addCategory(sample, idx, category.innerHTML) }
+			}))
+		},
+		{
+			type: "submenu",
 			label: "remove from category",
 			submenu: samples[idx].categories.map(category => ({
 				label: category,
 				click() { removeCategory(sample, idx, category) }
+			}))
+		},
+		{
+			type: "submenu",
+			label: "add tag",
+			submenu: tagInfos.map(tag => ({
+				label: tag.name,
+				click() {
+					addTag(tagList, idx, tag.name)
+				}
 			}))
 		},
 		{
@@ -155,6 +201,15 @@ function setSampleContextMenu(sample, idx) {
 		sampleMenu.popup({ window: remote.getCurrentWindow() })
 		e.preventDefault()
 		e.stopPropagation()
+	}
+}
+
+function updateContextMenus() {
+	for (let i = 1; i < sampleList.children.length-1; ++i) {
+		setSampleContextMenu(sampleList.children[i], sampleList.children[i].id)
+	}
+	for (let i = 0; i < samples.length; ++i) {
+		if (samples[i].DOMelem) { setSampleContextMenu(samples[i].DOMelem, i) }
 	}
 }
 

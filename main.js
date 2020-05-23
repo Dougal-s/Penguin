@@ -141,9 +141,9 @@ function walk(dir, match, walkId) {
 				if (!isAudioFile(filePath)) return
 
 				if (!match || match.test(path.basename(filePath))) {
-					db.get(`SELECT tags from files where sample_path = ${filePath}`, (err, row) => {
-						const sampleCategories = row ? row.categories.split(",") : [];
-						const sampleTags = row ? row.tags.split(",") : [];
+					db.get(`SELECT tags from files where sample_path = "${filePath}"`, (err, row) => {
+						const sampleCategories = typeof row !== "undefined" && typeof row.categories !== "undefined" ? row.categories.split(",") : [];
+						const sampleTags = typeof row !== "undefined" && typeof row.tags !== "undefined" ? row.tags.split(",") : [];
 						window.send("add-sample", {
 							filePath: filePath,
 							categories: sampleCategories,
@@ -167,11 +167,9 @@ ipcMain.on("update-sample-info", (event, updateInfo) => {
 	const data = updateInfo.updateData.join(",")
 	db.run(`
 		INSERT INTO files (sample_path, ${updateInfo.updateTarget})
-		VALUES
-			(${updateInfo.samplePath}, ${data})
-		ON DUPLICATE KEY
-		UPDATE files SET ${updateInfo.updateTarget} = ${data}
-		WHERE sample_path = ${updateInfo.samplePath}
+		VALUES ("${updateInfo.samplePath}", "${data}")
+		ON CONFLICT(sample_path) DO UPDATE SET
+			${updateInfo.updateTarget} = "${data}"
 	`)
 })
 
