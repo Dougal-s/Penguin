@@ -27,7 +27,7 @@ function returnSelectedPaths() {
 function createWaveformPath(audioBuffer) {
 	const path = {
 		path: new Path2D(),
-		width: 1920,
+		width: 1920.0,
 		height: remToPx(7.0)
 	}
 	const channelHeight = path.height/audioBuffer.numberOfChannels
@@ -38,6 +38,7 @@ function createWaveformPath(audioBuffer) {
 		path.path.moveTo(0, channelHeight*(channel + 0.5*(buffer[0]+1)))
 		for (let sample = 1; sample < audioBuffer.length; ++sample) {
 			path.path.lineTo(sample*stepSize, channelHeight*(channel + 0.5*(buffer[sample]+1)))
+			while (sample+1 < audioBuffer.length && buffer[sample] === buffer[sample+1]) { ++sample }
 		}
 	}
 	return Object.freeze(path)
@@ -146,13 +147,6 @@ function removeCategory(sample, idx, category) {
 function setSampleContextMenu(sample, idx) {
 	const tagList = sample.getElementsByClassName("tag-list")[0]
 	const menuTemplate = [
-		{
-			label: samples[idx].filePath.split("\\").pop().split("/").pop(),
-			enabled: false
-		},
-		{
-			type: "separator"
-		},
 		{
 			label: "remove from selected category",
 			click() {
@@ -405,18 +399,9 @@ function createSample(sampleInfo, idx) {
 	return sample
 }
 
-function updateSample(idx) {
-	const sample = document.getElementById(idx.toString())
+function updateSampleInfo(idx) {
+	const sample = document.getElementById(idx.toString()) || samples[idx].DOMelem
 	if (!sample) { return }
-
-	//
-	if (samples[idx].selected) {
-		if (!sample.classList.contains("selected-sample")) {
-			sample.classList.add("selected-sample")
-		}
-	} else {
-		sample.classList.remove("selected-sample")
-	}
 
 	// set error message
 	if (samples[idx].error) {
@@ -431,6 +416,16 @@ function updateSample(idx) {
 	sample.children[3].children[2].innerHTML
 		= Math.floor(duration/60).toString() + ":"
 		+ ("0"+(duration%60).toString()).slice(-2)
+}
+
+function updateSample(sample, idx) {
+	if (samples[idx].selected) {
+		if (!sample.classList.contains("selected-sample")) {
+			sample.classList.add("selected-sample")
+		}
+	} else {
+		sample.classList.remove("selected-sample")
+	}
 }
 
 function updateWaveform(idx) {
@@ -462,8 +457,8 @@ function updateSampleListDisplay() {
 		}
 		if (samples[i].DOMelem) {
 			samples[i].DOMelem.id = i
+			updateSample(samples[i].DOMelem, i)
 			sampleList.insertBefore(samples[i].DOMelem, sampleList.lastChild)
-			updateSample(i)
 		} else {
 			sampleList.insertBefore(createSample(samples[i], i), sampleList.lastChild)
 		}
@@ -559,7 +554,7 @@ ipcRenderer.on("file-data", (e, fileData) => {
 		if (idx === -1) { return }
 		samples[idx].buffer = buffer
 		samples[idx].duration = buffer.duration
-		updateSample(idx)
+		updateSampleInfo(idx)
 		samples[idx].path = createWaveformPath(samples[idx].buffer)
 		updateWaveform(idx)
 	}).catch(err => {
@@ -568,6 +563,6 @@ ipcRenderer.on("file-data", (e, fileData) => {
 			= samples.findIndex(sample => sample.filePath === fileData.filePath)
 		if (idx === -1) { return }
 		samples[idx].error = err
-		updateSample(idx)
+		updateSampleInfo(idx)
 	})
 })
