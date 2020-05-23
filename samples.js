@@ -249,6 +249,42 @@ function createSample(sampleInfo, idx) {
 		sample.children[0].children[3].children[1].src = "icons/play_circle_outline.svg"
 	}
 
+	// handle drag and drop events
+
+	// to allow droping on the sample
+	sample.children[0].addEventListener("dragover", (e) => { e.preventDefault() })
+	sample.children[0].addEventListener("dragenter", (e) => { e.preventDefault() })
+
+	// drag and drop tags
+	sample.children[0].addEventListener("dragenter", function(e) {
+		if (dragEventType === dragTypes.tag) {
+			const tagElem = templateTag.content.cloneNode(true)
+			tagElem.children[0].style.opacity = "50%"
+			this.children[0].children[1].appendChild(tagElem)
+		}
+	})
+
+	sample.children[0].addEventListener("dragleave", function(e) {
+		if (dragEventType === dragTypes.tag) {
+			this.children[0].children[1].lastChild.remove()
+		}
+	})
+
+	sample.children[0].addEventListener("drop", function(e) {
+		if (dragEventType === dragTypes.tag) {
+			this.children[0].children[1].lastChild.remove()
+			addTag(this.children[0].children[1], idx, e.dataTransfer.getData("tag"))
+		}
+	})
+
+	// drag and drop categories
+
+	sample.children[0].addEventListener("drop", function(e) {
+		if (dragEventType === dragTypes.category) {
+			addCategory(this, idx, e.dataTransfer.getData("category"))
+		}
+	})
+
 	// Click events
 	let deselect = false
 	sample.children[0].addEventListener("mousedown", e => {

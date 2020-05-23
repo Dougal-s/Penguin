@@ -19,6 +19,13 @@ let tagInfos = []
 // Resizing sidepanel
 let resizing = false
 
+const dragTypes = {
+	tag: 0,
+	category: 1
+}
+Object.freeze(dragTypes)
+let dragEvent;
+
 drag.addEventListener("mousedown", e => { resizing = true })
 
 window.addEventListener("mousemove", e => {
@@ -103,6 +110,12 @@ function createCategoryElement(categoryName) {
 			this.id = "selected-category"
 		}
 		filterUpdate()
+	})
+
+	category.children[0].addEventListener("dragstart", (e) => {
+		dragEventType = dragTypes.category
+		e.dataTransfer.setData("category", categoryName)
+		e.dataTransfer.dropEffect = "copy"
 	})
 
 	const categoryMenu = Menu.buildFromTemplate([{
@@ -214,6 +227,12 @@ function createTagElement(tagInfo) {
 		if (tagInfo.selected) this.classList.add("selected-tag")
 		else this.classList.remove("selected-tag")
 		filterUpdate()
+	})
+
+	tag.children[0].addEventListener("dragstart", (e) => {
+		dragEventType = dragTypes.tag
+		e.dataTransfer.setData("tag", tagInfo.name)
+		e.dataTransfer.dropEffect = "copy"
 	})
 
 	const tagMenu = Menu.buildFromTemplate([
