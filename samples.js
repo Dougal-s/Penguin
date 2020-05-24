@@ -9,6 +9,15 @@ let samples = []
 // for storing samples which do not match the tags or categories
 let hiddenSamples = []
 
+const orderings = {
+	AZ: (lhs, rhs) => getFileName(lhs.filePath).localeCompare(getFileName(rhs.filePath)),
+	ZA: (lhs, rhs) => getFileName(rhs.filePath).localeCompare(getFileName(lhs.filePath)),
+	path: (lhs, rhs) => lhs.filePath.localeCompare(rhs.filePath)
+}
+Object.freeze(orderings)
+
+let ordering = orderings.AZ
+
 const sampleList = document.getElementById("sample-list")
 const sampleTemplate = document.getElementById("template-sample")
 Object.freeze(sampleTemplate)
@@ -19,6 +28,50 @@ document.getElementById("delete-icon").addEventListener("click", () => {
 	searchBar.value = ""
 	updateSamples()
 })
+
+// More actions panel
+const moreActionsBtn = document.getElementById("more-actions")
+const moreActionsPanel = document.getElementById("more-actions-panel")
+let lastClickEvent;
+moreActionsBtn.addEventListener("click", (e) => {
+	if (!moreActionsPanel.classList.contains("visible")) {
+		lastClickEvent = e
+		moreActionsPanel.classList.add("visible")
+	}
+})
+
+window.addEventListener("click", (e) => {
+	if (lastClickEvent !== e && moreActionsPanel.classList.contains("visible")) {
+		moreActionsPanel.classList.remove("visible")
+	}
+})
+
+// Reload samples
+document.getElementById("reload-button").addEventListener("click", updateSamples)
+
+// sample ordering
+document.getElementById("A-Z").addEventListener("change", () => {
+	ordering = orderings.AZ
+	updateOrdering()
+	updateSampleListDisplay()
+})
+document.getElementById("Z-A").addEventListener("change", () => {
+	ordering = orderings.ZA
+	updateOrdering()
+	updateSampleListDisplay()
+})
+document.getElementById("filepath").addEventListener("change", () => {
+	ordering = orderings.path
+	updateOrdering()
+	updateSampleListDisplay()
+})
+
+function getFileName(filepath) {
+	return filepath.split("\\").pop().split("/").pop()
+}
+
+// sorts the samples using ordering
+function updateOrdering() { samples.sort(ordering) }
 
 function returnSelectedPaths() {
 	return Array.from(samples.filter(info => info.selected), x => x.filePath)
@@ -224,7 +277,7 @@ function createSample(sampleInfo, idx) {
 
 	// set sample name
 	sample.children[0].children[0].children[0].innerHTML
-		= sampleInfo.filePath.split("\\").pop().split("/").pop()
+		= getFileName(sampleInfo.filePath)
 
 	// set sample path
 	sample.children[0].children[1].innerHTML = sampleInfo.filePath
@@ -473,6 +526,7 @@ function updateWaveform(idx) {
 	}
 }
 
+// this is called when the samples need to be updated but have not been removed
 function updateSampleListDisplay() {
 	const height = remToPx(13.5)+1
 	// The first element on the screen
@@ -482,7 +536,7 @@ function updateSampleListDisplay() {
 
 	sampleList.firstElementChild.style.height = (start*height).toString() + "px"
 	while (2 < sampleList.children.length) {
-		const index = Number(sampleList.children[1].id)
+		const index = samples.findIndex(sample => sample.filePath === sampleList.children[1].children[1].textContent)
 		samples[index].DOMelem = sampleList.removeChild(sampleList.children[1])
 	}
 
@@ -503,6 +557,7 @@ function updateSampleListDisplay() {
 	sampleList.lastChild.style.height = ((samples.length-end)*height).toString() + "px"
 }
 
+// This is called when samples are removed
 function resetSampleListDisplay() {
 	const height = remToPx(13.5)+1
 	// The first element on the screen
@@ -571,6 +626,7 @@ function filterUpdate() {
 			--i
 		}
 	}
+	updateOrdering()
 	resetSampleListDisplay()
 }
 
@@ -579,7 +635,7 @@ ipcRenderer.on("add-sample", (e, sampleInfo) => {
 		!== sampleInfo.match) { return }
 	sampleInfo.selected = false
 	sampleInfo.duration = 0
-	samples.push(sampleInfo)
+	samples.splice(samples.findIndex( sample => ordering(sample, sampleInfo) > 0 ), 0, sampleInfo)
 	updateSampleListDisplay()
 })
 
