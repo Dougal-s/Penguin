@@ -197,7 +197,8 @@ function removeCategory(sample, idx, category) {
 	setSampleContextMenu(sample, idx)
 }
 
-function setSampleContextMenu(sample, idx) {
+function setSampleContextMenu(sample) {
+	const idx = Number(sample.id)
 	const tagList = sample.getElementsByClassName("tag-list")[0]
 	const menuTemplate = [
 		{
@@ -260,7 +261,160 @@ function updateContextMenus() {
 	}
 }
 
-let lastSelectedIndex = 0
+function isVisible(idx) {
+	const height = remToPx(13.5)+1
+	const start = Math.min(samples.length-1, Math.floor(sampleList.scrollTop/height))
+	const end = Math.min(samples.length, Math.ceil((sampleList.scrollTop+sampleList.offsetHeight)/height))
+	return start < idx && idx < end-1
+}
+
+let lastSelectedIndex = -1
+let shiftPoint = -1
+// keyboard events
+window.addEventListener("keydown", (e) => {
+	if (!e.isComposing) {
+		const height = remToPx(13.5)+1
+		switch (e.code) {
+			case "ArrowDown":
+				e.preventDefault()
+				if (lastSelectedIndex+1 < samples.length) {
+					for (const sample of samples) { sample.selected = false }
+					++lastSelectedIndex
+					if (e.shiftKey) {
+						if (shiftPoint === -1) {
+							shiftPoint = Math.max(lastSelectedIndex-1, 0)
+						}
+						const start = Math.min(lastSelectedIndex, shiftPoint)
+						const end = Math.max(lastSelectedIndex, shiftPoint)
+						for (let i = start; i <= end; ++i) {
+							samples[i].selected = true;
+						}
+						if (!isVisible(end)) {
+							sampleList.scrollTo(0, height*(end+1)-sampleList.offsetHeight)
+						}
+					} else {
+						shiftPoint = -1
+						samples[lastSelectedIndex].selected = true
+						if (!isVisible(lastSelectedIndex)) {
+							sampleList.scrollTo(0, height*(lastSelectedIndex+1)-sampleList.offsetHeight)
+						}
+					}
+					updateSampleListDisplay()
+				}
+				break;
+			case "ArrowUp":
+				e.preventDefault()
+				if (lastSelectedIndex > 0) {
+					for (const sample of samples) { sample.selected = false }
+					--lastSelectedIndex
+					if (e.shiftKey) {
+						if (shiftPoint === -1) {
+							shiftPoint = lastSelectedIndex+1
+						}
+						const start = Math.min(lastSelectedIndex, shiftPoint)
+						const end = Math.max(lastSelectedIndex, shiftPoint)
+						for (let i = start; i <= end; ++i) {
+							samples[i].selected = true;
+						}
+						if (!isVisible(end)) {
+							sampleList.scrollTo(0, height*end)
+						}
+					} else {
+						shiftPoint = -1
+						samples[lastSelectedIndex].selected = true
+						if (!isVisible(lastSelectedIndex)) {
+							sampleList.scrollTo(0, height*lastSelectedIndex)
+						}
+					}
+					updateSampleListDisplay()
+				}
+				break;
+			case "Space":
+			case "Enter":
+				e.preventDefault()
+				// toggle playback for all the selected smaples
+				const selectedSamples = samples.filter(sample => sample.selected)
+				for (let i = 0; i < selectedSamples.length; ++i) {
+					const sample = selectedSamples[i].DOMelem || document.getElementById(i)
+					if (!selectedSamples[i].buffer) { return }
+
+					if (selectedSamples[i].audio) {
+						selectedSamples[i].audio.stop()
+					} else {
+						const playbackMarker = document.createElement("div")
+						playbackMarker.classList.add("playback-marker")
+						sample.children[3].append(playbackMarker)
+
+						const startPlayback = (offset) => {
+							selectedSamples[i].audio = audioCtx.createBufferSource()
+							selectedSamples[i].audio.addEventListener("ended", audioEndEventListener)
+							selectedSamples[i].audio.buffer = selectedSamples[i].buffer
+							selectedSamples[i].audio.connect(gainNode)
+							selectedSamples[i].audio.start(0, offset)
+							const startTime = audioCtx.currentTime-offset
+							function movePlaybackMarker() {
+								if (playbackMarker.parentNode) {
+									const elapsed = audioCtx.currentTime - startTime
+									const length = selectedSamples[i].duration
+									const width = playbackMarker.parentNode.children[0].offsetWidth
+									playbackMarker.style.left = elapsed/length * width + "px"
+								}
+
+								if (selectedSamples[i].audio) {
+									window.requestAnimationFrame(movePlaybackMarker)
+								}
+							}
+							window.requestAnimationFrame(movePlaybackMarker)
+							sample.children[3].children[1].src = "icons/pause_circle_outline.svg"
+						}
+
+						let scrubbing = false
+						function startScrubbing(e) {
+							scrubbing = true
+							selectedSamples[i].audio.removeEventListener("ended", audioEndEventListener)
+							selectedSamples[i].audio.stop()
+							selectedSamples[i].audio = null
+						}
+
+						function scrub(e) {
+							if (scrubbing) {
+								const parentBox = playbackMarker.parentNode.children[0].getBoundingClientRect()
+								playbackMarker.style.left = Math.min(parentBox.width, Math.max(0, e.clientX-parentBox.left)) + "px"
+							}
+						}
+
+						function stopScrubbing(e) {
+							if (scrubbing) {
+								scrubbing = false
+								const parentBox = playbackMarker.parentNode.children[0].getBoundingClientRect()
+								const offset = selectedSamples[i].duration*Math.min(parentBox.width, Math.max(0, e.clientX-parentBox.left))/parentBox.width
+								startPlayback(offset)
+							}
+						}
+
+						const audioEndEventListener = () => {
+							if (selectedSamples[i]) {
+								playbackMarker.parentNode.children[0].removeEventListener("mousedown", startScrubbing)
+								window.removeEventListener("mousemove", scrub)
+								window.removeEventListener("mouseup", stopScrubbing)
+								playbackMarker.remove()
+								selectedSamples[i].audio = null;
+								sample.children[3].children[1].src = "icons/play_circle_outline.svg"
+							}
+						}
+
+						playbackMarker.parentNode.children[0].addEventListener("mousedown", startScrubbing)
+						window.addEventListener("mousemove", scrub)
+						window.addEventListener("mouseup", stopScrubbing)
+
+						startPlayback(0)
+					}
+				}
+				break
+		}
+	}
+})
+
 function createSample(sampleInfo, idx) {
 	const sample = sampleTemplate.content.cloneNode(true)
 
@@ -326,7 +480,7 @@ function createSample(sampleInfo, idx) {
 	sample.children[0].addEventListener("drop", function(e) {
 		if (dragEventType === dragTypes.tag) {
 			this.children[0].children[1].lastChild.remove()
-			addTag(this.children[0].children[1], idx, e.dataTransfer.getData("tag"))
+			addTag(this.children[0].children[1], Number(this.id), e.dataTransfer.getData("tag"))
 		}
 	})
 
@@ -334,17 +488,18 @@ function createSample(sampleInfo, idx) {
 
 	sample.children[0].addEventListener("drop", function(e) {
 		if (dragEventType === dragTypes.category) {
-			addCategory(this, idx, e.dataTransfer.getData("category"))
+			addCategory(this, Number(this.id), e.dataTransfer.getData("category"))
 		}
 	})
 
 	// Click events
 	let deselect = false
-	sample.children[0].addEventListener("mousedown", e => {
+	sample.children[0].addEventListener("mousedown", function(e) {
 		deselect = false
 		if (e.button !== 0) { return }
 
-		if (e.shiftKey && lastSelectedIndex != -1) {
+		const idx = Number(this.id)
+		if (e.shiftKey && lastSelectedIndex !== -1) {
             const rangeStart = Math.min(lastSelectedIndex, idx)
             const rangeEnd = Math.max(lastSelectedIndex, idx)
 	        if (!e.ctrlKey) {
@@ -371,7 +526,7 @@ function createSample(sampleInfo, idx) {
 		updateSampleListDisplay()
 	})
 
-	sample.children[0].addEventListener("mouseup", e => {
+	sample.children[0].addEventListener("mouseup", function(e) {
 		if (e.button !== 0) { return }
 		if (deselect) {
 			if (e.ctrlKey || samples.filter(info => info.selected).length === 1) {
@@ -380,7 +535,7 @@ function createSample(sampleInfo, idx) {
 			} else {
 				for (const elem of samples) elem.selected = false
 				sampleInfo.selected = true
-				lastSelectedIndex = idx
+				lastSelectedIndex = Number(this.id)
 			}
 			updateSampleListDisplay()
 			deselect = false;
@@ -405,6 +560,7 @@ function createSample(sampleInfo, idx) {
 	sample.children[0].children[3].children[1].addEventListener("mousedown", e => { e.stopPropagation() })
 
 	sample.children[0].children[3].children[1].addEventListener("click", function(e) {
+		const idx = Number(this.parentNode.parentNode.id)
 		e.preventDefault()
 		e.stopPropagation()
 		if (!samples[idx].buffer) { return }
@@ -559,6 +715,10 @@ function updateSampleListDisplay() {
 
 // This is called when samples are removed
 function resetSampleListDisplay() {
+	for (const elem of samples) {
+		if (elem.audio) { elem.audio.stop() }
+	}
+
 	const height = remToPx(13.5)+1
 	// The first element on the screen
 	const start = Math.min(samples.length-1, Math.floor(sampleList.scrollTop/height))
