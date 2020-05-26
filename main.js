@@ -141,9 +141,9 @@ function walk(dir, match, walkId) {
 				if (!isAudioFile(filePath)) return
 
 				if (!match || match.test(path.basename(filePath))) {
-					db.get(`SELECT tags from files where sample_path = "${filePath}"`, (err, row) => {
-						const sampleCategories = typeof row !== "undefined" && typeof row.categories !== "undefined" ? row.categories.split(",") : [];
-						const sampleTags = typeof row !== "undefined" && typeof row.tags !== "undefined" ? row.tags.split(",") : [];
+					db.get(`SELECT categories, tags from files where sample_path = "${filePath}"`, (err, row) => {
+						const sampleCategories = typeof row !== "undefined" && row.categories ? row.categories.split(",") : [];
+						const sampleTags = typeof row !== "undefined" && row.tags ? row.tags.split(",") : [];
 						window.send("add-sample", {
 							filePath: filePath,
 							categories: sampleCategories,
