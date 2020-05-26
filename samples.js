@@ -109,13 +109,13 @@ function drawWaveform(canvas, path) {
 
 const templateTag = document.getElementById("template-tag")
 Object.freeze(templateTag)
-function createSampleTagElement(tagList, idx, tag) {
+function createSampleTagElement(tagList, sampleInfo, tag) {
 	const tagElem = templateTag.content.cloneNode(true)
 	tagElem.children[0].innerHTML = tag
 
 	const sampleMenu = Menu.buildFromTemplate([{
 		label: "remove tag",
-		click() { removeTag(tagList, idx, tag) }
+		click() { removeTag(tagList, sampleInfo, tag) }
 	}])
 
 	tagElem.children[0].addEventListener("mousedown", e => { e.stopPropagation() })
@@ -129,83 +129,87 @@ function createSampleTagElement(tagList, idx, tag) {
 	tagList.appendChild(tagElem)
 }
 
-function setSampleTags(tagList, idx) {
+function setSampleTags(tagList, sampleInfo) {
 	tagList.innerHTML = ""
-	for (const tag of samples[idx].tags) {
-		createSampleTagElement(tagList, idx, tag)
+	for (const tag of sampleInfo.tags) {
+		createSampleTagElement(tagList, sampleInfo, tag)
 	}
 }
 
-function addTag(tagList, idx, tag) {
-	if (samples[idx].tags.includes(tag)) { return }
-	samples[idx].tags.push(tag)
+function addTag(tagList, sampleInfo, tag) {
+	if (sampleInfo.tags.includes(tag)) { return }
+	sampleInfo.tags.push(tag)
 	ipcRenderer.send("update-sample-info", {
-		samplePath: samples[idx].filePath,
+		samplePath: sampleInfo.filePath,
 		updateTarget: "tags",
-		updateData: samples[idx].tags
+		updateData: sampleInfo.tags
 	})
-	createSampleTagElement(tagList, idx, tag)
-	setSampleContextMenu(tagList.parentElement.parentElement, idx)
+	createSampleTagElement(tagList, sampleInfo, tag)
+	setSampleContextMenu(sampleInfo)
 }
 
-function removeTag(tagList, idx, tag) {
-	const selectedTags = getSelectedTags()
-	if (selectedTags.some(tagInfo => tagInfo.name === tag)) {
-		sample = tagList.parentNode.parentNode
-		sample.remove()
-		samples.splice(idx, 1)
-		resetSampleListDisplay()
-		return
-	}
-	samples[idx].tags.splice(samples[idx].tags.indexOf(tag), 1)
-	ipcRenderer.send("update-sample-info", {
-		samplePath: samples[idx].filePath,
-		updateTarget: "tags",
-		updateData: samples[idx].tags
-	})
-	Array.from(tagList.children).find(elem => elem.innerHTML === tag).remove()
-	setSampleContextMenu(tagList.parentElement.parentElement, idx)
-}
-
-function addCategory(sample, idx, category) {
-	if (samples[idx].categories.includes(category)) { return }
-
-	samples[idx].categories.push(category)
-	ipcRenderer.send("update-sample-info", {
-		samplePath: samples[idx].filePath,
-		updateTarget: "categories",
-		updateData: samples[idx].categories
-	})
-	setSampleContextMenu(sample, idx)
-}
-
-function removeCategory(sample, idx, category) {
-	const selectedCategory = document.getElementById("selected-category")
-	if (selectedCategory && selectedCategory.innerHTML == category) {
-		sample.remove()
-		samples.splice(idx, 1)
-		resetSampleListDisplay()
-		return
-	}
-
-	samples[idx].categories.splice(samples[idx].categories.indexOf(category), 1)
-	ipcRenderer.send("update-sample-info", {
-		samplePath: samples[idx].filePath,
-		updateTarget: "categories",
-		updateData: samples[idx].categories
-	})
-	setSampleContextMenu(sample, idx)
-}
-
-function setSampleContextMenu(sample) {
+function removeSampleFromDisplay(sample) {
 	const idx = Number(sample.id)
-	const tagList = sample.getElementsByClassName("tag-list")[0]
+	if (samples[idx].audio) { samples[idx].audio.stop() }
+	sample.remove()
+
+	hiddenSamples.push(samples.splice(idx, 1)[0])
+	updateSampleListDisplay()
+}
+
+function removeTag(tagList, sampleInfo, tag) {
+	const selectedTags = getSelectedTags()
+	sampleInfo.tags.splice(sampleInfo.tags.indexOf(tag), 1)
+	ipcRenderer.send("update-sample-info", {
+		samplePath: sampleInfo.filePath,
+		updateTarget: "tags",
+		updateData: sampleInfo.tags
+	})
+	if (selectedTags.some(tagInfo => tagInfo.name === tag)) {
+		removeSampleFromDisplay(tagList.parentNode.parentNode)
+		return
+	}
+	Array.from(tagList.children).find(elem => elem.innerHTML === tag).remove()
+	setSampleContextMenu(sampleInfo)
+}
+
+function addCategory(sampleInfo, category) {
+	if (sampleInfo.categories.includes(category)) { return }
+
+	sampleInfo.categories.push(category)
+	ipcRenderer.send("update-sample-info", {
+		samplePath: sampleInfo.filePath,
+		updateTarget: "categories",
+		updateData: sampleInfo.categories
+	})
+	setSampleContextMenu(sampleInfo)
+}
+
+function removeCategory(sampleInfo, category) {
+	const selectedCategory = document.getElementById("selected-category")
+	sampleInfo.categories.splice(sampleInfo.categories.indexOf(category), 1)
+	ipcRenderer.send("update-sample-info", {
+		samplePath: sampleInfo.filePath,
+		updateTarget: "categories",
+		updateData: sampleInfo.categories
+	})
+
+	if (selectedCategory && selectedCategory.innerHTML == category) {
+		removeSampleFromDisplay(sampleInfo.DOMelem)
+		return
+	}
+
+	setSampleContextMenu(sampleInfo)
+}
+
+function setSampleContextMenu(sampleInfo) {
+	const tagList = sampleInfo.DOMelem.getElementsByClassName("tag-list")[0]
 	const menuTemplate = [
 		{
 			label: "remove from selected category",
 			click() {
 				const category = document.getElementById("selected-category")
-				if (category) { removeCategory(sample, idx, category.innerHTML) }
+				if (category) { removeCategory(sampleInfo, category.innerHTML) }
 			}
 		},
 		{
@@ -213,15 +217,15 @@ function setSampleContextMenu(sample) {
 			label: "add to categories",
 			submenu: [...categoryList.children].filter(category => category.children.length === 0).map(category => ({
 				label: category.innerHTML,
-				click() { addCategory(sample, idx, category.innerHTML) }
+				click() { addCategory(sampleInfo, category.innerHTML) }
 			}))
 		},
 		{
 			type: "submenu",
 			label: "remove from category",
-			submenu: samples[idx].categories.map(category => ({
+			submenu: sampleInfo.categories.map(category => ({
 				label: category,
-				click() { removeCategory(sample, idx, category) }
+				click() { removeCategory(sampleInfo, category) }
 			}))
 		},
 		{
@@ -230,22 +234,22 @@ function setSampleContextMenu(sample) {
 			submenu: tagInfos.map(tag => ({
 				label: tag.name,
 				click() {
-					addTag(tagList, idx, tag.name)
+					addTag(tagList, sampleInfo, tag.name)
 				}
 			}))
 		},
 		{
 			type: "submenu",
 			label: "remove tag",
-			submenu: samples[idx].tags.map(tag => ({
+			submenu: sampleInfo.tags.map(tag => ({
 				label: tag,
-				click() { removeTag(tagList, idx, tag) }
+				click() { removeTag(tagList, sampleInfo, tag) }
 			}))
 		}
 	]
 	const sampleMenu = Menu.buildFromTemplate(menuTemplate)
 
-	sample.oncontextmenu = e => {
+	sampleInfo.DOMelem.oncontextmenu = e => {
 		sampleMenu.popup({ window: remote.getCurrentWindow() })
 		e.preventDefault()
 		e.stopPropagation()
@@ -253,11 +257,8 @@ function setSampleContextMenu(sample) {
 }
 
 function updateContextMenus() {
-	for (let i = 1; i < sampleList.children.length-1; ++i) {
-		setSampleContextMenu(sampleList.children[i], sampleList.children[i].id)
-	}
-	for (let i = 0; i < samples.length; ++i) {
-		if (samples[i].DOMelem) { setSampleContextMenu(samples[i].DOMelem, i) }
+	for (const sample of samples) {
+		if (sample.DOMelem) { setSampleContextMenu(sample) }
 	}
 }
 
@@ -335,88 +336,86 @@ window.addEventListener("keydown", (e) => {
 				// toggle playback for all the selected smaples
 				const selectedSamples = samples.filter(sample => sample.selected)
 				for (let i = 0; i < selectedSamples.length; ++i) {
-					const sample = selectedSamples[i].DOMelem || document.getElementById(i)
 					if (!selectedSamples[i].buffer) { return }
 
-					if (selectedSamples[i].audio) {
-						selectedSamples[i].audio.stop()
-					} else {
-						const playbackMarker = document.createElement("div")
-						playbackMarker.classList.add("playback-marker")
-						sample.children[3].append(playbackMarker)
-
-						const startPlayback = (offset) => {
-							selectedSamples[i].audio = audioCtx.createBufferSource()
-							selectedSamples[i].audio.addEventListener("ended", audioEndEventListener)
-							selectedSamples[i].audio.buffer = selectedSamples[i].buffer
-							selectedSamples[i].audio.connect(gainNode)
-							selectedSamples[i].audio.start(0, offset)
-							const startTime = audioCtx.currentTime-offset
-							function movePlaybackMarker() {
-								if (playbackMarker.parentNode) {
-									const elapsed = audioCtx.currentTime - startTime
-									const length = selectedSamples[i].duration
-									const width = playbackMarker.parentNode.children[0].offsetWidth
-									playbackMarker.style.left = elapsed/length * width + "px"
-								}
-
-								if (selectedSamples[i].audio) {
-									window.requestAnimationFrame(movePlaybackMarker)
-								}
-							}
-							window.requestAnimationFrame(movePlaybackMarker)
-							sample.children[3].children[1].src = "icons/pause_circle_outline.svg"
-						}
-
-						let scrubbing = false
-						function startScrubbing(e) {
-							scrubbing = true
-							selectedSamples[i].audio.removeEventListener("ended", audioEndEventListener)
-							selectedSamples[i].audio.stop()
-							selectedSamples[i].audio = null
-						}
-
-						function scrub(e) {
-							if (scrubbing) {
-								const parentBox = playbackMarker.parentNode.children[0].getBoundingClientRect()
-								playbackMarker.style.left = Math.min(parentBox.width, Math.max(0, e.clientX-parentBox.left)) + "px"
-							}
-						}
-
-						function stopScrubbing(e) {
-							if (scrubbing) {
-								scrubbing = false
-								const parentBox = playbackMarker.parentNode.children[0].getBoundingClientRect()
-								const offset = selectedSamples[i].duration*Math.min(parentBox.width, Math.max(0, e.clientX-parentBox.left))/parentBox.width
-								startPlayback(offset)
-							}
-						}
-
-						const audioEndEventListener = () => {
-							if (selectedSamples[i]) {
-								playbackMarker.parentNode.children[0].removeEventListener("mousedown", startScrubbing)
-								window.removeEventListener("mousemove", scrub)
-								window.removeEventListener("mouseup", stopScrubbing)
-								playbackMarker.remove()
-								selectedSamples[i].audio = null;
-								sample.children[3].children[1].src = "icons/play_circle_outline.svg"
-							}
-						}
-
-						playbackMarker.parentNode.children[0].addEventListener("mousedown", startScrubbing)
-						window.addEventListener("mousemove", scrub)
-						window.addEventListener("mouseup", stopScrubbing)
-
-						startPlayback(0)
-					}
+					if (selectedSamples[i].audio) { selectedSamples[i].audio.stop()	}
+					else { startSamplePlayback(samples[i]) }
 				}
 				break
 		}
 	}
 })
 
+function startSamplePlayback(sampleInfo) {
+	const playbackMarker = document.createElement("div")
+	playbackMarker.classList.add("playback-marker")
+	sampleInfo.DOMelem.children[3].append(playbackMarker)
+
+	const startAudio = (offset) => {
+		sampleInfo.audio = audioCtx.createBufferSource()
+		sampleInfo.audio.addEventListener("ended", audioEndEventListener)
+		sampleInfo.audio.buffer = sampleInfo.buffer
+		sampleInfo.audio.connect(gainNode)
+		sampleInfo.audio.start(0, offset)
+		const startTime = audioCtx.currentTime-offset
+		function movePlaybackMarker() {
+			if (sampleInfo.audio && playbackMarker.parentNode) {
+				const elapsed = audioCtx.currentTime - startTime
+				const length = sampleInfo.duration
+				const width = playbackMarker.parentNode.children[0].offsetWidth
+				playbackMarker.style.left = elapsed/length * width + "px"
+				window.requestAnimationFrame(movePlaybackMarker)
+			}
+		}
+		window.requestAnimationFrame(movePlaybackMarker)
+		sampleInfo.DOMelem.children[3].children[1].src = "icons/pause_circle_outline.svg"
+	}
+
+	let scrubbing = false
+	function startScrubbing(e) {
+		scrubbing = true
+		sampleInfo.audio.removeEventListener("ended", audioEndEventListener)
+		sampleInfo.audio.stop()
+		sampleInfo.audio = null
+	}
+
+	function scrub(e) {
+		if (scrubbing) {
+			const parentBox = playbackMarker.parentNode.children[0].getBoundingClientRect()
+			playbackMarker.style.left = Math.min(parentBox.width, Math.max(0, e.clientX-parentBox.left)) + "px"
+		}
+	}
+
+	function stopScrubbing(e) {
+		if (scrubbing) {
+			scrubbing = false
+			const parentBox = playbackMarker.parentNode.children[0].getBoundingClientRect()
+			const offset = sampleInfo.duration*Math.min(parentBox.width, Math.max(0, e.clientX-parentBox.left))/parentBox.width
+			startAudio(offset)
+		}
+	}
+
+	const audioEndEventListener = () => {
+		if (sampleInfo) {
+			playbackMarker.parentNode.children[0].removeEventListener("mousedown", startScrubbing)
+			window.removeEventListener("mousemove", scrub)
+			window.removeEventListener("mouseup", stopScrubbing)
+			playbackMarker.remove()
+			sampleInfo.audio = null
+			sampleInfo.DOMelem.children[3].children[1].src = "icons/play_circle_outline.svg"
+		}
+	}
+
+	playbackMarker.parentNode.children[0].addEventListener("mousedown", startScrubbing)
+	window.addEventListener("mousemove", scrub)
+	window.addEventListener("mouseup", stopScrubbing)
+
+	startAudio(0)
+}
+
 function createSample(sampleInfo, idx) {
 	const sample = sampleTemplate.content.cloneNode(true)
+	sampleInfo.DOMelem = sample.children[0]
 
 	sample.children[0].id = idx
 
@@ -444,13 +443,13 @@ function createSample(sampleInfo, idx) {
 
 	// set sample tags
 	const tagList = sample.children[0].getElementsByClassName("tag-list")[0]
-	setSampleTags(tagList, idx)
+	setSampleTags(tagList, sampleInfo)
 
-	if (samples[idx].path) {
-		drawWaveform(sample.children[0].children[3].children[0], samples[idx].path)
+	if (sampleInfo.path) {
+		drawWaveform(sample.children[0].children[3].children[0], sampleInfo.path)
 	}
 
-	if (samples[idx].audio) {
+	if (sampleInfo.audio) {
 		sample.children[0].children[3].children[1].src = "icons/pause_circle_outline.svg"
 	} else {
 		sample.children[0].children[3].children[1].src = "icons/play_circle_outline.svg"
@@ -480,7 +479,7 @@ function createSample(sampleInfo, idx) {
 	sample.children[0].addEventListener("drop", function(e) {
 		if (dragEventType === dragTypes.tag) {
 			this.children[0].children[1].lastChild.remove()
-			addTag(this.children[0].children[1], Number(this.id), e.dataTransfer.getData("tag"))
+			addTag(this.children[0].children[1], sampleInfo, e.dataTransfer.getData("tag"))
 		}
 	})
 
@@ -488,7 +487,7 @@ function createSample(sampleInfo, idx) {
 
 	sample.children[0].addEventListener("drop", function(e) {
 		if (dragEventType === dragTypes.category) {
-			addCategory(this, Number(this.id), e.dataTransfer.getData("category"))
+			addCategory(sampleInfo, e.dataTransfer.getData("category"))
 		}
 	})
 
@@ -542,7 +541,7 @@ function createSample(sampleInfo, idx) {
 		}
 	})
 
-	setSampleContextMenu(sample.children[0], idx)
+	setSampleContextMenu(sampleInfo)
 
 	sample.children[0].addEventListener("dragstart", e => {
 		e.preventDefault()
@@ -560,111 +559,42 @@ function createSample(sampleInfo, idx) {
 	sample.children[0].children[3].children[1].addEventListener("mousedown", e => { e.stopPropagation() })
 
 	sample.children[0].children[3].children[1].addEventListener("click", function(e) {
-		const idx = Number(this.parentNode.parentNode.id)
 		e.preventDefault()
 		e.stopPropagation()
-		if (!samples[idx].buffer) { return }
-		if (samples[idx].audio) {
-			samples[idx].audio.stop()
+		if (!sampleInfo.buffer) { return }
+		if (sampleInfo.audio) {
+			sampleInfo.audio.stop()
 		} else {
-			const playbackMarker = document.createElement("div")
-			playbackMarker.classList.add("playback-marker")
-			this.parentNode.append(playbackMarker)
-
-			const startPlayback = (offset) => {
-				for (const elem of samples) {
-					if (elem.audio) { elem.audio.stop() }
-				}
-
-				samples[idx].audio = audioCtx.createBufferSource()
-				samples[idx].audio.addEventListener("ended", audioEndEventListener)
-				samples[idx].audio.buffer = samples[idx].buffer
-				samples[idx].audio.connect(gainNode)
-				samples[idx].audio.start(0, offset)
-				const startTime = audioCtx.currentTime-offset
-				function movePlaybackMarker() {
-					if (playbackMarker.parentNode) {
-						const elapsed = audioCtx.currentTime - startTime
-						const length = samples[idx].duration
-						const width = playbackMarker.parentNode.children[0].offsetWidth
-						playbackMarker.style.left = elapsed/length * width + "px"
-					}
-
-					if (samples[idx].audio) {
-						window.requestAnimationFrame(movePlaybackMarker)
-					}
-				}
-				window.requestAnimationFrame(movePlaybackMarker)
-				this.src = "icons/pause_circle_outline.svg"
+			for (const elem of samples) {
+				if (elem.audio) { elem.audio.stop() }
 			}
-
-			let scrubbing = false
-			function startScrubbing(e) {
-				scrubbing = true
-				samples[idx].audio.removeEventListener("ended", audioEndEventListener)
-				samples[idx].audio.stop()
-				samples[idx].audio = null
-			}
-
-			function scrub(e) {
-				if (scrubbing) {
-					const parentBox = playbackMarker.parentNode.children[0].getBoundingClientRect()
-					playbackMarker.style.left = Math.min(parentBox.width, Math.max(0, e.clientX-parentBox.left)) + "px"
-				}
-			}
-
-			function stopScrubbing(e) {
-				if (scrubbing) {
-					scrubbing = false
-					const parentBox = playbackMarker.parentNode.children[0].getBoundingClientRect()
-					const offset = samples[idx].duration*Math.min(parentBox.width, Math.max(0, e.clientX-parentBox.left))/parentBox.width
-					startPlayback(offset)
-				}
-			}
-
-			const audioEndEventListener = () => {
-				if (samples[idx]) {
-					playbackMarker.parentNode.children[0].removeEventListener("mousedown", startScrubbing)
-					window.removeEventListener("mousemove", scrub)
-					window.removeEventListener("mouseup", stopScrubbing)
-					playbackMarker.remove()
-					samples[idx].audio = null;
-					this.src = "icons/play_circle_outline.svg"
-				}
-			}
-
-			playbackMarker.parentNode.children[0].addEventListener("mousedown", startScrubbing)
-			window.addEventListener("mousemove", scrub)
-			window.addEventListener("mouseup", stopScrubbing)
-
-			startPlayback(0)
+			startSamplePlayback(sampleInfo)
 		}
 	})
 
-	return sample
+	return sample.children[0]
 }
 
-function updateSampleInfo(idx) {
-	const sample = document.getElementById(idx.toString()) || samples[idx].DOMelem
-	if (!sample) { return }
+function updateDisplayedInfo(sampleInfo) {
+	if (!sampleInfo.DOMelem) { return }
 
 	// set error message
-	if (samples[idx].error) {
-		if (!sample.classList.contains("decode-error")) {
-			sample.classList.add("decode-error")
+	if (sampleInfo.error) {
+		if (!sampleInfo.DOMelem.classList.contains("decode-error")) {
+			sampleInfo.DOMelem.classList.add("decode-error")
 		}
-		sample.children[3].children[3].children[1].innerHTML = samples[idx].error
+		sampleInfo.DOMelem.children[3].children[3].children[1].innerHTML = sampleInfo.error
 	}
 
 	// set sample length
-	const duration = Math.round(samples[idx].duration)
-	sample.children[3].children[2].innerHTML
+	const duration = Math.round(sampleInfo.duration)
+	sampleInfo.DOMelem.children[3].children[2].innerHTML
 		= Math.floor(duration/60).toString() + ":"
 		+ ("0"+(duration%60).toString()).slice(-2)
 }
 
-function updateSample(sample, idx) {
-	if (samples[idx].selected) {
+function updateSample(sample, sampleInfo) {
+	if (sampleInfo.selected) {
 		if (!sample.classList.contains("selected-sample")) {
 			sample.classList.add("selected-sample")
 		}
@@ -673,16 +603,6 @@ function updateSample(sample, idx) {
 	}
 }
 
-function updateWaveform(idx) {
-	const sample = document.getElementById(idx.toString())
-	if (sample) {
-		drawWaveform(sample.children[3].children[0], samples[idx].path)
-	} else if (samples[idx].DOMelem) {
-		drawWaveform(samples[idx].DOMelem.children[3].children[0], samples[idx].path)
-	}
-}
-
-// this is called when the samples need to be updated but have not been removed
 function updateSampleListDisplay() {
 	const height = remToPx(13.5)+1
 	// The first element on the screen
@@ -691,10 +611,7 @@ function updateSampleListDisplay() {
 	const end = Math.min(samples.length, Math.ceil((sampleList.scrollTop+sampleList.offsetHeight)/height))
 
 	sampleList.firstElementChild.style.height = (start*height).toString() + "px"
-	while (2 < sampleList.children.length) {
-		const index = samples.findIndex(sample => sample.filePath === sampleList.children[1].children[1].textContent)
-		samples[index].DOMelem = sampleList.removeChild(sampleList.children[1])
-	}
+	while (2 < sampleList.children.length) { sampleList.children[1].remove() }
 
 	for (let i = start; samples[i] && i < end; ++i) {
 		if (!samples[i].decoded) {
@@ -703,7 +620,7 @@ function updateSampleListDisplay() {
 		}
 		if (samples[i].DOMelem) {
 			samples[i].DOMelem.id = i
-			updateSample(samples[i].DOMelem, i)
+			updateSample(samples[i].DOMelem, samples[i])
 			sampleList.insertBefore(samples[i].DOMelem, sampleList.lastChild)
 		} else {
 			sampleList.insertBefore(createSample(samples[i], i), sampleList.lastChild)
@@ -711,38 +628,6 @@ function updateSampleListDisplay() {
 	}
 
 	sampleList.lastChild.style.height = ((samples.length-end)*height).toString() + "px"
-}
-
-// This is called when samples are removed
-function resetSampleListDisplay() {
-	for (const elem of samples) {
-		if (elem.audio) { elem.audio.stop() }
-	}
-
-	const height = remToPx(13.5)+1
-	// The first element on the screen
-	const start = Math.min(samples.length-1, Math.floor(sampleList.scrollTop/height))
-	// find first element that is below the screen
-	const end = Math.min(samples.length, Math.ceil((sampleList.scrollTop+sampleList.offsetHeight)/height))
-
-	const top = document.createElement("div")
-	top.style.height = (start*height).toString() + "px"
-	top.style.visibility = "hidden"
-
-	sampleList.innerHTML = ""
-	sampleList.appendChild(top)
-	for (let i = start; samples[i] && i < end; ++i) {
-		if (!samples[i].decoded) {
-			samples[i].decoded = true;
-			ipcRenderer.send("read-file", samples[i].filePath)
-		}
-		sampleList.appendChild(createSample(samples[i], i))
-	}
-
-	const bottom = document.createElement("div")
-	bottom.style.height = ((samples.length-end)*height).toString() + "px"
-	bottom.style.visibility = "hidden"
-	sampleList.appendChild(bottom)
 }
 
 sampleList.addEventListener("scroll", updateSampleListDisplay)
@@ -754,26 +639,29 @@ function updateSamples() {
 	}
 	samples = []
 	hiddenSamples = []
-	resetSampleListDisplay()
-	ipcRenderer.send("update-samples", match, getSelectedTags(), getSelectedCategories())
+	updateSampleListDisplay()
+	ipcRenderer.send("update-samples", match)
 }
 
 // called when a tag or category is selected/deselected
 function passesFilter(sampleInfo, filter) {
 	for (const tag of filter.tags) {
-		if (!sampleInfo.tags.includes(tag)) { return false }
+		if (!sampleInfo.tags.includes(tag.name)) { return false }
 	}
+
 	if (!filter.categories.length) { return true }
+
 	for (const category of sampleInfo.categories) {
-		if (filter.categories.includes(category)) {
-			return true
-		}
+		if (filter.categories.includes(category)) { return true }
 	}
 
 	return false
 }
 
 function filterUpdate() {
+	for (const sample of samples) {
+		if (sample.audio) { sample.audio.stop() }
+	}
 	const filter = Object.freeze({
 		tags: getSelectedTags(),
 		categories: getSelectedCategories()
@@ -787,7 +675,7 @@ function filterUpdate() {
 		}
 	}
 	updateOrdering()
-	resetSampleListDisplay()
+	updateSampleListDisplay()
 }
 
 ipcRenderer.on("add-sample", (e, sampleInfo) => {
@@ -801,20 +689,20 @@ ipcRenderer.on("add-sample", (e, sampleInfo) => {
 
 ipcRenderer.on("file-data", (e, fileData) => {
 	audioCtx.decodeAudioData(fileData.buffer.buffer).then(buffer => {
-		const idx
-			= samples.findIndex(sample => sample.filePath === fileData.filePath)
-		if (idx === -1) { return }
-		samples[idx].buffer = buffer
-		samples[idx].duration = buffer.duration
-		updateSampleInfo(idx)
-		samples[idx].path = createWaveformPath(samples[idx].buffer)
-		updateWaveform(idx)
+		const sample
+			= samples.find(sample => sample.filePath === fileData.filePath)
+		if (!sample) { return }
+		sample.buffer = buffer
+		sample.duration = buffer.duration
+		updateDisplayedInfo(sample)
+		sample.path = createWaveformPath(sample.buffer)
+		drawWaveform(sample.DOMelem.children[3].children[0], sample.path)
 	}).catch(err => {
 		console.log(`failed to decode: '${fileData.filePath}'`)
-		const idx
-			= samples.findIndex(sample => sample.filePath === fileData.filePath)
-		if (idx === -1) { return }
-		samples[idx].error = err
-		updateSampleInfo(idx)
+		const sample
+			= samples.find(sample => sample.filePath === fileData.filePath)
+		if (!sample) { return }
+		sample.error = err
+		updateDisplayedInfo(sample)
 	})
 })
