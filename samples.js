@@ -610,8 +610,21 @@ function updateSampleListDisplay() {
 	// find first element that is below the screen
 	const end = Math.min(samples.length, Math.ceil((sampleList.scrollTop+sampleList.offsetHeight)/height))
 
-	sampleList.firstElementChild.style.height = (start*height).toString() + "px"
 	while (2 < sampleList.children.length) { sampleList.children[1].remove() }
+
+	sampleList.innerHTML = ""
+	const list = document.createDocumentFragment()
+
+	const top = document.createElement("div")
+	top.style.visible = "hidden"
+	top.style.height = (start*height).toString() + "px"
+
+	const bottom = document.createElement("div")
+	bottom.style.visible = "hidden"
+	bottom.style.height = ((samples.length-end)*height).toString() + "px"
+
+	list.appendChild(top)
+	list.appendChild(bottom)
 
 	for (let i = start; samples[i] && i < end; ++i) {
 		if (!samples[i].decoded) {
@@ -621,13 +634,13 @@ function updateSampleListDisplay() {
 		if (samples[i].DOMelem) {
 			samples[i].DOMelem.id = i
 			updateSample(samples[i].DOMelem, samples[i])
-			sampleList.insertBefore(samples[i].DOMelem, sampleList.lastChild)
+			list.insertBefore(samples[i].DOMelem, bottom)
 		} else {
-			sampleList.insertBefore(createSample(samples[i], i), sampleList.lastChild)
+			list.insertBefore(createSample(samples[i], i), bottom)
 		}
 	}
 
-	sampleList.lastChild.style.height = ((samples.length-end)*height).toString() + "px"
+	sampleList.appendChild(list)
 }
 
 sampleList.addEventListener("scroll", updateSampleListDisplay)
