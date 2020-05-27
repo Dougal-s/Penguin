@@ -84,12 +84,14 @@ function createWaveformPath(audioBuffer) {
 		height: remToPx(7.0)
 	}
 	const channelHeight = path.height/audioBuffer.numberOfChannels
+	// if the sample is too long then skip some points
+	const sampleStep = path.width/audioBuffer.length < 0.5 ? 2 : 1
 	const stepSize = path.width/audioBuffer.length
 
 	for (let channel = 0; channel < audioBuffer.numberOfChannels; ++channel) {
 		const buffer = audioBuffer.getChannelData(channel)
 		path.path.moveTo(0, channelHeight*(channel + 0.5*(buffer[0]+1)))
-		for (let sample = 1; sample < audioBuffer.length; ++sample) {
+		for (let sample = 1; sample < audioBuffer.length; sample += sampleStep) {
 			path.path.lineTo(sample*stepSize, channelHeight*(channel + 0.5*(buffer[sample]+1)))
 			while (sample+1 < audioBuffer.length && buffer[sample] === buffer[sample+1]) { ++sample }
 		}
@@ -247,13 +249,15 @@ function setSampleContextMenu(sampleInfo) {
 			}))
 		}
 	]
-	const sampleMenu = Menu.buildFromTemplate(menuTemplate)
+	window.requestIdleCallback(() => {
+		const sampleMenu = Menu.buildFromTemplate(menuTemplate)
 
-	sampleInfo.DOMelem.oncontextmenu = e => {
-		sampleMenu.popup({ window: remote.getCurrentWindow() })
-		e.preventDefault()
-		e.stopPropagation()
-	}
+		sampleInfo.DOMelem.oncontextmenu = e => {
+			sampleMenu.popup({ window: remote.getCurrentWindow() })
+			e.preventDefault()
+			e.stopPropagation()
+		}
+	})
 }
 
 function updateContextMenus() {
