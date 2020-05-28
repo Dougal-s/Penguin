@@ -152,7 +152,7 @@ function addTag(tagList, sampleInfo, tag) {
 
 function removeSampleFromDisplay(sample) {
 	const idx = Number(sample.id)
-	if (samples[idx].audio) { samples[idx].audio.stop() }
+	if (samples[idx].audio) { stopPlayback(samples[idx]) }
 	sample.remove()
 
 	hiddenSamples.push(samples.splice(idx, 1)[0])
@@ -339,31 +339,48 @@ window.addEventListener("keydown", (e) => {
 				e.preventDefault()
 				// toggle playback for all the selected smaples
 				const selectedSamples = samples.filter(sample => sample.selected)
-				for (let i = 0; i < selectedSamples.length; ++i) {
-					if (!selectedSamples[i].buffer) { return }
+				for (const sample of samples) {
+					if (!sample.buffer) { continue }
+					if (!sample.selected) {
+						if (sample.audio) { stopPlayback(sample) }
+						continue
+					}
 
-					if (selectedSamples[i].audio) { selectedSamples[i].audio.stop()	}
-					else { startSamplePlayback(samples[i]) }
+					if (sample.audio) { stopPlayback(sample) }
+					else { startSamplePlayback(sample) }
 				}
 				break
 		}
 	}
 })
 
+function stopPlayback(sampleInfo) {
+	sampleInfo.gainNode.gain.setValueAtTime(sampleInfo.gainNode.gain.value, audioCtx.currentTime)
+	sampleInfo.gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.015)
+	const audioNode = sampleInfo.audio
+	sampleInfo.audio = null
+	window.setTimeout(() => { audioNode.stop() }, 15)
+}
+
 function startSamplePlayback(sampleInfo) {
+	sampleInfo.gainNode = audioCtx.createGain()
+	sampleInfo.gainNode.gain.value = 1
+	sampleInfo.gainNode.connect(gainNode)
+
 	const playbackMarker = document.createElement("div")
 	playbackMarker.classList.add("playback-marker")
 	sampleInfo.DOMelem.children[3].append(playbackMarker)
 
+	let scrubbing = false
 	const startAudio = (offset) => {
 		sampleInfo.audio = audioCtx.createBufferSource()
 		sampleInfo.audio.addEventListener("ended", audioEndEventListener)
 		sampleInfo.audio.buffer = sampleInfo.buffer
-		sampleInfo.audio.connect(gainNode)
+		sampleInfo.audio.connect(sampleInfo.gainNode)
 		sampleInfo.audio.start(0, offset)
 		const startTime = audioCtx.currentTime-offset
 		function movePlaybackMarker() {
-			if (sampleInfo.audio && playbackMarker.parentNode) {
+			if (!scrubbing && sampleInfo.audio && playbackMarker.parentNode) {
 				const elapsed = audioCtx.currentTime - startTime
 				const length = sampleInfo.duration
 				const width = playbackMarker.parentNode.children[0].offsetWidth
@@ -375,12 +392,12 @@ function startSamplePlayback(sampleInfo) {
 		sampleInfo.DOMelem.children[3].children[1].src = "icons/pause_circle_outline.svg"
 	}
 
-	let scrubbing = false
 	function startScrubbing(e) {
+		sampleInfo.gainNode.gain.setValueAtTime(sampleInfo.gainNode.gain.value, audioCtx.currentTime)
+		sampleInfo.gainNode.gain.linearRampToValueAtTime(0.0, audioCtx.currentTime + 0.01)
 		scrubbing = true
 		sampleInfo.audio.removeEventListener("ended", audioEndEventListener)
-		sampleInfo.audio.stop()
-		sampleInfo.audio = null
+		scrub(e)
 	}
 
 	function scrub(e) {
@@ -392,6 +409,10 @@ function startSamplePlayback(sampleInfo) {
 
 	function stopScrubbing(e) {
 		if (scrubbing) {
+			sampleInfo.audio.stop()
+			sampleInfo.audio = null
+			sampleInfo.gainNode.gain.setValueAtTime(sampleInfo.gainNode.gain.value, audioCtx.currentTime)
+			sampleInfo.gainNode.gain.linearRampToValueAtTime(1.0, audioCtx.currentTime + 0.001)
 			scrubbing = false
 			const parentBox = playbackMarker.parentNode.children[0].getBoundingClientRect()
 			const offset = sampleInfo.duration*Math.min(parentBox.width, Math.max(0, e.clientX-parentBox.left))/parentBox.width
@@ -567,10 +588,10 @@ function createSample(sampleInfo, idx) {
 		e.stopPropagation()
 		if (!sampleInfo.buffer) { return }
 		if (sampleInfo.audio) {
-			sampleInfo.audio.stop()
+			stopPlayback(sampleInfo)
 		} else {
 			for (const elem of samples) {
-				if (elem.audio) { elem.audio.stop() }
+				if (elem.audio) { stopPlayback(elem) }
 			}
 			startSamplePlayback(sampleInfo)
 		}
@@ -652,7 +673,7 @@ sampleList.addEventListener("scroll", updateSampleListDisplay)
 function updateSamples() {
 	const match = document.getElementById("searchbar-text").value
 	for (const elem of samples) {
-		if (elem.audio) { elem.audio.stop() }
+		if (elem.audio) { stopPlayback(elem) }
 	}
 	samples = []
 	hiddenSamples = []
@@ -677,7 +698,7 @@ function passesFilter(sampleInfo, filter) {
 
 function filterUpdate() {
 	for (const sample of samples) {
-		if (sample.audio) { sample.audio.stop() }
+		if (sample.audio) { stopPlayback(sample) }
 	}
 	const filter = Object.freeze({
 		tags: getSelectedTags(),
