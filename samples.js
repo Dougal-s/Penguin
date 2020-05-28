@@ -641,8 +641,16 @@ function updateSampleListDisplay() {
 	const list = document.createDocumentFragment()
 
 	const top = document.createElement("div")
-	top.style.visible = "hidden"
-	top.style.height = (start*height).toString() + "px"
+	if (getSamplePaths().length === 0) {
+		top.style.height = "100%"
+		top.innerHTML = "Samples Directories Not Set"
+	} else if (samples.length === 0) {
+		top.style.height = "100%"
+		top.innerHTML = "No Samples Found"
+	} else {
+		top.style.height = (start*height).toString() + "px"
+		top.style.visible = "hidden"
+	}
 
 	const bottom = document.createElement("div")
 	bottom.style.visible = "hidden"

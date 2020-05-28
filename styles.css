@@ -233,7 +233,15 @@ body {
     list-style: none;
 }
 
-#sample-list .sample:last-child {
+#sample-list > div:first-child {
+    font-style: italic;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-color-3)
+}
+
+#sample-list .sample:nth-last-child(2) {
     border-bottom: none
 }
 

@@ -35,7 +35,7 @@
 
 @font-face {
     font-family: "Roboto";
-    src: url("Roboto/Roboto-RegularItalic.ttf") format('truetype');
+    src: url("Roboto/Roboto-Italic.ttf") format('truetype');
     font-weight: 400;
     font-style: Italic;
 }
