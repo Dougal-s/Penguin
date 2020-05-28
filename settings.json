@@ -1,17 +1,5 @@
 {
-	"sampleDirectories": [
-		"/home/dougal/Samples"
-	],
-	"categories": [
-		"Drums",
-		"Screams of the dead",
-		"for debug purposes"
-	],
-	"tags": [
-		"Dark",
-		"Darker",
-		"Darkest",
-		"Darkester",
-		"for debug purposes"
-	]
+	"sampleDirectories": [],
+	"categories": [],
+	"tags": []
 }
