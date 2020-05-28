@@ -5,7 +5,7 @@ const addSampleDirBtn = document.getElementById("add-dir")
 function getSamplePaths() {
     const paths = []
     for (const dir of sampleDirs.children)
-        paths.push(dir.children[0].value)
+        if (dir.children[0].value) paths.push(dir.children[0].value)
     return paths
 }
 
@@ -60,5 +60,8 @@ addSampleDirBtn.addEventListener("click", (e) => {
 
 ipcRenderer.once("sampleDirectories", (event, sampleDirectories) => {
     for (const dir of sampleDirectories) { createSampleDir(dir) }
+    if (sampleDirectories.length === 0) {
+        createSampleDir("")
+    }
 })
 ipcRenderer.send("getSampleDirectories")
