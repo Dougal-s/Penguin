@@ -43,9 +43,9 @@ function createSampleDir(path) {
 
     sampleDir.children[0].children[1].addEventListener("click", (e) => {
         e.target.parentNode.children[0].classList.remove("error")
-        const path = dialog.showOpenDialogSync({ properties: ["openDirectory"] })
-        if (!path) return
-        e.target.parentNode.children[0].value = path
+        const newPath = dialog.showOpenDialogSync({ properties: ["openDirectory"] })
+        if (!newPath) return
+        e.target.parentNode.children[0].value = newPath
 
         ipcRenderer.sendSync("updateSampleDirs", getSamplePaths())
         updateSamples()

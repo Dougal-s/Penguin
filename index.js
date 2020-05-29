@@ -7,7 +7,7 @@
  * index.js
  */
 const { remote, ipcRenderer } = require("electron")
-const { dialog, Menu, MenuItem } = remote
+const { dialog, Menu } = remote
 
 const sidebar = document.getElementById("sidebar")
 const mainPanel = document.getElementById("main-panel")
