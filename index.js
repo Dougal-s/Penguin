@@ -75,7 +75,7 @@ function createEmptyCategoryElement() {
 	window.addEventListener("click", checkForDeselect)
 	name.addEventListener("change", (e) => {
 		if (e.target.value) {
-			if (validCategoryName(e.target.value)) {
+			if (!validCategoryName(e.target.value)) {
 				e.target.style.borderColor = "red"
 				e.target.focus()
 				return
@@ -192,7 +192,7 @@ function createEmptyTagElement() {
 	})
 	name.addEventListener("change", (e) => {
 		if (e.target.value) {
-			if (validTagName(e.target.value)) {
+			if (!validTagName(e.target.value)) {
 				e.target.parentNode.classList.add("invalid-name")
 				e.target.focus()
 				return
