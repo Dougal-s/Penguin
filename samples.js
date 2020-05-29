@@ -516,6 +516,18 @@ function createSample(sampleInfo, idx) {
 		}
 	})
 
+	// drag and drop from the sample
+
+	sample.children[0].addEventListener("dragstart", e => {
+		e.preventDefault()
+		ipcRenderer.send("ondragstart", returnSelectedPaths())
+	})
+
+	sample.children[0].children[3].addEventListener("dragstart", e => {
+		e.preventDefault()
+		e.stopPropagation()
+	})
+
 	// Click events
 	let deselect = false
 	sample.children[0].addEventListener("mousedown", function(e) {
@@ -568,16 +580,7 @@ function createSample(sampleInfo, idx) {
 
 	setSampleContextMenu(sampleInfo)
 
-	sample.children[0].addEventListener("dragstart", e => {
-		e.preventDefault()
-		ipcRenderer.send("ondragstart", returnSelectedPaths())
-	})
-
 	sample.children[0].children[3].addEventListener("mousedown", e => {
-		e.preventDefault()
-		e.stopPropagation()
-	})
-	sample.children[0].children[3].addEventListener("dragstart", e => {
 		e.preventDefault()
 		e.stopPropagation()
 	})

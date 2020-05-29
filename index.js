@@ -20,11 +20,16 @@ let tagInfos = []
 let resizing = false
 
 const dragTypes = {
-	tag: 0,
-	category: 1
+	none: 0,
+	tag: 1,
+	category: 2
 }
 Object.freeze(dragTypes)
 let dragEvent;
+
+document.addEventListener("dragend", e => {
+	dragEventType = dragTypes.none
+})
 
 drag.addEventListener("mousedown", e => { resizing = true })
 
