@@ -117,7 +117,7 @@ function createSampleTagElement(tagList, sampleInfo, tag) {
 
 	const sampleMenu = Menu.buildFromTemplate([{
 		label: "remove tag",
-		click() { removeTag(tagList, sampleInfo, tag) }
+		click() { removeTag(sampleInfo, tag) }
 	}])
 
 	tagElem.children[0].addEventListener("mousedown", e => { e.stopPropagation() })
@@ -159,7 +159,8 @@ function removeSampleFromDisplay(sample) {
 	updateSampleListDisplay()
 }
 
-function removeTag(tagList, sampleInfo, tag) {
+function removeTag(sampleInfo, tag) {
+	const tagList = sampleInfo.DOMelem.getElementsByClassName("tag-list")[0]
 	const selectedTags = getSelectedTags()
 	sampleInfo.tags.splice(sampleInfo.tags.indexOf(tag), 1)
 	ipcRenderer.send("update-sample-info", {
@@ -245,7 +246,7 @@ function setSampleContextMenu(sampleInfo) {
 			label: "remove tag",
 			submenu: sampleInfo.tags.map(tag => ({
 				label: tag,
-				click() { removeTag(tagList, sampleInfo, tag) }
+				click() { removeTag(sampleInfo, tag) }
 			}))
 		}
 	]

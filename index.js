@@ -127,8 +127,13 @@ function createCategoryElement(categoryName) {
 		label: "remove category",
 		click() {
 			[...categoryList.children].find(elem => elem.innerHTML === categoryName).remove()
-			updateContextMenus()
 			ipcRenderer.send("removeCategory", categoryName)
+			for (const sample of samples) {
+				if (sample.categories.includes(categoryName)) {
+					removeCategory(sample, categoryName)
+				}
+			}
+			updateContextMenus()
 		}
 	}])
 
@@ -246,8 +251,13 @@ function createTagElement(tagInfo) {
 			click() {
 				[...tagList.children].find(elem => elem.innerHTML === tagInfo.name).remove()
 				ipcRenderer.send("removeTag", tagInfo.name)
-				updateContextMenus()
 				tagInfos.splice(tagInfos.indexOf(tagInfo), 1)
+				for (const sample of samples) {
+					if (sample.tags.includes(tagInfo.name)) {
+						removeTag(sample, tagInfo.name)
+					}
+				}
+				updateContextMenus()
 			}
 		}
 	])
