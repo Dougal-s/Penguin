@@ -83,6 +83,18 @@ ipcMain.on("removeCategory", (event, category) => {
 		if (e) return console.log(e)
 		console.log(`removed category '${category}' in 'settings.json'`)
 	})
+	db.each("SELECT sample_path, categories FROM files", (err, row) => {
+		const categories = row.categories.split(",")
+		const index = categories.indexOf(category)
+		if (index !== -1) {
+			categories.splice(index, 1)
+			db.exec(`
+				UPDATE files
+				SET categories = "${categories}"
+				WHERE sample_path = "${row.sample_path}"
+			`)
+		}
+	})
 })
 
 ipcMain.once("getTags", (event) => {
@@ -102,6 +114,18 @@ ipcMain.on("removeTag", (event, tag) => {
 	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), function(e) {
 		if (e) return console.log(e)
 		console.log(`removed tag '${tag}' in 'settings.json'`)
+	})
+	db.each("SELECT sample_path, tags FROM files", (err, row) => {
+		const tags = row.tags.split(",")
+		const index = tags.indexOf(tag)
+		if (index !== -1) {
+			tags.splice(index, 1)
+			db.exec(`
+				UPDATE files
+				SET tags = "${tags}"
+				WHERE sample_path = "${row.sample_path}"
+			`)
+		}
 	})
 })
 
@@ -165,7 +189,7 @@ function walk(dir, match, walkId) {
  */
 ipcMain.on("update-sample-info", (event, updateInfo) => {
 	const data = updateInfo.updateData.join(",")
-	db.run(`
+	db.exec(`
 		INSERT INTO files (sample_path, ${updateInfo.updateTarget})
 		VALUES ("${updateInfo.samplePath}", "${data}")
 		ON CONFLICT(sample_path) DO UPDATE SET
