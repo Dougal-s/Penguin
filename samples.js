@@ -277,7 +277,7 @@ let lastSelectedIndex = -1
 let shiftPoint = -1
 // keyboard events
 window.addEventListener("keydown", (e) => {
-	if (!e.isComposing) {
+	if (document.activeElement.tagName === "BODY") {
 		const height = remToPx(13.5)+1
 		switch (e.code) {
 			case "ArrowDown":
