@@ -1,5 +1,11 @@
 {
-	"sampleDirectories": [],
-	"categories": [],
-	"tags": []
+	"sampleDirectories": [
+		"/home/dougal/Samples"
+	],
+	"categories": [
+		"Kick"
+	],
+	"tags": [
+		"Dark"
+	]
 }
