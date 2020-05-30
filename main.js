@@ -1,15 +1,12 @@
 
 const {app, BrowserWindow, ipcMain} = require("electron")
 const fs = require("fs")
-const path = require("path")
 const sqlite3 = require('sqlite3')
 const db = new sqlite3.Database(
 	"./files.sqlite3",
 	sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
 	(e) => {
-		if (e) {
-			throw "failed to open sqlite3 database!: " + e
-		}
+		if (e) { throw "failed to open sqlite3 database!: " + e }
 
 		db.run(`
 			CREATE TABLE IF NOT EXISTS files(
@@ -61,9 +58,7 @@ app.on("activate", () => {
 	if (BrowserWindow.getAllWindows().length === 0) createWindow()
 })
 
-app.on("quit", () => {
-	db.close()
-})
+app.on("quit", () => { db.close() })
 
 
 ipcMain.on("ondragstart", (event, filePaths) => {
@@ -79,7 +74,7 @@ ipcMain.once("getCategories", (event) => {
 
 ipcMain.on("addCategory", (event, category) => {
 	settings.categories.push(category)
-	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), function(e) {
+	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), (e) => {
 		if (e) return console.log(e)
 		console.log(`added category '${category}' to 'settings.json'`)
 	})
@@ -87,7 +82,7 @@ ipcMain.on("addCategory", (event, category) => {
 
 ipcMain.on("removeCategory", (event, category) => {
 	settings.categories.splice(settings.categories.indexOf(category), 1)
-	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), function(e) {
+	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), (e) => {
 		if (e) return console.log(e)
 		console.log(`removed category '${category}' in 'settings.json'`)
 	})
@@ -111,7 +106,7 @@ ipcMain.once("getTags", (event) => {
 
 ipcMain.on("addTag", (event, tag) => {
 	settings.tags.push(tag)
-	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), function(e) {
+	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), (e) => {
 		if (e) return console.log(e)
 		console.log(`added tag '${tag}' to 'settings.json'`)
 	})
@@ -119,7 +114,7 @@ ipcMain.on("addTag", (event, tag) => {
 
 ipcMain.on("removeTag", (event, tag) => {
 	settings.tags.splice(settings.tags.indexOf(tag), 1)
-	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), function(e) {
+	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), (e) => {
 		if (e) return console.log(e)
 		console.log(`removed tag '${tag}' in 'settings.json'`)
 	})
@@ -143,7 +138,7 @@ ipcMain.once("getSampleDirectories", (event) => {
 
 ipcMain.on("updateSampleDirs", (event, paths) => {
 	settings.sampleDirectories = paths;
-	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), function(e) {
+	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), (e) => {
 		if (e) return console.log(e)
 		console.log(`updated sampleDirectories in 'settings.json' to [${paths}]`)
 	})
@@ -158,6 +153,7 @@ function isAudioFile(fileName) {
 }
 
 let walkCount = 0;
+const path = require("path")
 function walk(dir, match, walkId) {
 	if (walkId !== walkCount) return
 	fs.readdir(dir, (e, files) => {
