@@ -6,7 +6,11 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "postinstall": "install-app-deps"
+    "postinstall": "install-app-deps",
+	"build": "electron-packager .",
+	"linux": "electron-packager . --platform=linux",
+	"macos": "electron-packager . --platform=darwin",
+	"windows": "electron-packager . --platform=win32"
   },
   "keywords": [
     "Audio"
@@ -14,7 +18,8 @@
   "author": "Dougal Stewart",
   "devDependencies": {
     "electron": "^8.2.5",
-    "electron-builder": "^22.6.1"
+    "electron-builder": "^22.6.1",
+    "electron-packager": "^14.2.1"
   },
   "dependencies": {
     "sqlite3": "^4.2.0"
