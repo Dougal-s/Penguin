@@ -422,14 +422,12 @@ function startSamplePlayback(sampleInfo) {
 	}
 
 	const audioEndEventListener = () => {
-		if (sampleInfo) {
-			playbackMarker.parentNode.children[0].removeEventListener("mousedown", startScrubbing)
-			window.removeEventListener("mousemove", scrub)
-			window.removeEventListener("mouseup", stopScrubbing)
-			playbackMarker.remove()
-			sampleInfo.audio = null
-			sampleInfo.DOMelem.children[3].children[1].src = "icons/play_circle_outline.svg"
-		}
+		playbackMarker.parentNode.children[0].removeEventListener("mousedown", startScrubbing)
+		window.removeEventListener("mousemove", scrub)
+		window.removeEventListener("mouseup", stopScrubbing)
+		playbackMarker.remove()
+		sampleInfo.audio = null
+		sampleInfo.DOMelem.children[3].children[1].src = "icons/play_circle_outline.svg"
 	}
 
 	playbackMarker.parentNode.children[0].addEventListener("mousedown", startScrubbing)
