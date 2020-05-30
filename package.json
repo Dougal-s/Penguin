@@ -9,7 +9,7 @@
     "postinstall": "install-app-deps",
 	"build": "electron-packager ./src",
 	"linux": "electron-packager ./src --platform=linux",
-	"macos": "electron-packager ./src --platform=darwin",
+	"macos": "electron-packager ./src --platform=darwin --icon='./penguin-development.icns'",
 	"windows": "electron-packager ./src --platform=win32"
   },
   "keywords": [
