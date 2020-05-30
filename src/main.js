@@ -14,13 +14,13 @@ const db = new sqlite3.Database(
 				categories TEXT,
 				tags TEXT
 			) WITHOUT ROWID
-		`)
-
-		db.each(`SELECT sample_path from files`, (err, row) => {
-			fs.access(row.sample_path, fs.constants.F_OK, (err) => {
-				if (err) {
-					db.exec(`DELETE FROM files WHERE sample_path = '${row.sample_path}'`)
-				}
+		`, () => {	
+			db.each(`SELECT sample_path from files`, (err, row) => {
+				fs.access(row.sample_path, fs.constants.F_OK, (err) => {
+					if (err) {
+						db.exec(`DELETE FROM files WHERE sample_path = '${row.sample_path}'`)
+					}
+				})
 			})
 		})
 	}
