@@ -1,4 +1,5 @@
-sampleDirs = document.getElementById("sample-dirs")
+'use strict';
+const sampleDirs = document.getElementById("sample-dirs")
 const templateSampleDir = document.getElementById("template-sample-dir")
 const addSampleDirBtn = document.getElementById("add-dir")
 

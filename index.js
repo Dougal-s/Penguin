@@ -6,6 +6,7 @@
 /**
  * index.js
  */
+'use strict';
 const { remote, ipcRenderer } = require("electron")
 const { dialog, Menu } = remote
 
@@ -25,7 +26,7 @@ const dragTypes = {
 	category: 2
 }
 Object.freeze(dragTypes)
-let dragEvent;
+var dragEventType;
 
 document.addEventListener("dragend", e => {
 	dragEventType = dragTypes.none

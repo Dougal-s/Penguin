@@ -1,3 +1,4 @@
+'use strict';
 const remToPx = rem => rem*parseFloat(getComputedStyle(document.documentElement).fontSize)
 
 const audioCtx = new window.AudioContext
@@ -100,7 +101,6 @@ function createWaveformPath(audioBuffer) {
 }
 
 function drawWaveform(canvas, path) {
-	canvasStyle = window.getComputedStyle(canvas)
 	canvas.width = path.width
 	canvas.height = path.height
 	const ctx = canvas.getContext("2d")
