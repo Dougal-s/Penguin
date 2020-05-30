@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "description": "A basic sample browser",
   "repository": "https://github.com/Dougal-s/Penguin",
-  "main": "main.js",
+  "main": "./src/main.js",
   "scripts": {
     "start": "electron .",
     "postinstall": "install-app-deps",
-	"build": "electron-packager .",
-	"linux": "electron-packager . --platform=linux",
-	"macos": "electron-packager . --platform=darwin",
-	"windows": "electron-packager . --platform=win32"
+	"build": "electron-packager ./src",
+	"linux": "electron-packager ./src --platform=linux",
+	"macos": "electron-packager ./src --platform=darwin",
+	"windows": "electron-packager ./src --platform=win32"
   },
   "keywords": [
     "Audio"
