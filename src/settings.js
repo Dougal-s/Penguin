@@ -64,5 +64,6 @@ ipcRenderer.once("sampleDirectories", (event, sampleDirectories) => {
     if (sampleDirectories.length === 0) {
         createSampleDir("")
     }
+   updateSamples()
 })
 ipcRenderer.send("getSampleDirectories")
