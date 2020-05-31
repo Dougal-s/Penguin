@@ -7,7 +7,7 @@ gainNode.gain.value = 1
 gainNode.connect(audioCtx.destination)
 
 // number of samples to load at one time
-const sampleLoadCount = 50
+const sampleLoadCount = 100
 
 let samples = []
 // samples that havent been loaded. The ordering is undefined
@@ -758,6 +758,22 @@ function addSample(sampleInfo) {
 		samples.splice(index, 0, sampleInfo)
 		if (samples.length > sampleLimit) {
 			unloadedSamples.push(samples.pop())
+		}
+
+		const height = remToPx(13.5)+1
+		// The first element on the screen
+		const start = Math.min(samples.length-1, Math.floor(sampleList.scrollTop/height))
+		const top = sampleList.firstElementChild
+		if (index < start) {
+			top.style.height = toString(Number(top.style.height) + height) + "px"
+			return
+		}
+		// find first element that is below the screen
+		const end = Math.min(samples.length, Math.ceil((sampleList.scrollTop+sampleList.offsetHeight)/height))
+		const bottom = sampleList.lastElementChild
+		if (index >= end) {
+			bottom.style.height = toString(Number(bottom.style.height) + height) + "px"
+			return
 		}
 		updateSampleListDisplay()
 	} else {
