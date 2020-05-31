@@ -5,11 +5,11 @@
   "repository": "https://github.com/Dougal-s/Penguin",
   "main": "main.js",
   "scripts": {
-    "start": "electron ./src/main.js",
+    "start": "electron .",
     "postinstall": "install-app-deps",
-	"linux": "electron-packager ./src --platform=linux",
-	"macos": "electron-packager ./src --platform=darwin --icon='./penguin-development.icns'",
-	"windows": "electron-packager ./src --platform=win32"
+	"linux": "electron-packager . --platform=linux",
+	"macos": "electron-packager . --platform=darwin --icon='../penguin-development.icns'",
+	"windows": "electron-packager . --platform=win32"
   },
   "keywords": [
     "Audio"
