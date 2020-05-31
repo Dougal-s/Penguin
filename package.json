@@ -3,11 +3,10 @@
   "version": "1.0.0",
   "description": "A basic sample browser",
   "repository": "https://github.com/Dougal-s/Penguin",
-  "main": "./src/main.js",
+  "main": "main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "electron ./src/main.js",
     "postinstall": "install-app-deps",
-	"build": "electron-packager ./src",
 	"linux": "electron-packager ./src --platform=linux",
 	"macos": "electron-packager ./src --platform=darwin --icon='./penguin-development.icns'",
 	"windows": "electron-packager ./src --platform=win32"
