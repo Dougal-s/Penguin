@@ -241,8 +241,26 @@ body {
     color: var(--text-color-3)
 }
 
-#sample-list .sample:nth-last-child(2) {
-    border-bottom: none
+#sample-list > div:last-child {
+	position: relative
+}
+
+#sample-list #load-samples-btn {
+	background-color: var(--bg-color-1);
+	color: var(--text-color-4);
+	position: absolute;
+    bottom: 50%;
+	width: 10rem;
+	text-align: center;
+	padding: 0.5rem 1rem;
+	border-radius: 0.25rem;
+	left: 50%;
+	transform: translateX(-50%) translateY(50%);
+	user-select: none;
+}
+
+#sample-list #load-samples-btn:hover {
+	cursor: pointer;
 }
 
 .sample {

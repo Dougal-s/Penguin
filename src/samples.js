@@ -6,7 +6,12 @@ const gainNode = audioCtx.createGain()
 gainNode.gain.value = 1
 gainNode.connect(audioCtx.destination)
 
+// number of samples to load at one time
+const sampleLoadCount = 50
+
 let samples = []
+// samples that havent been loaded. The ordering is undefined
+let unloadedSamples = []
 // for storing samples which do not match the tags or categories
 let hiddenSamples = []
 
@@ -630,6 +635,18 @@ function updateSample(sample, sampleInfo) {
 	}
 }
 
+function loadSamples() {
+	sampleLimit += sampleLoadCount
+	for (let i = 0; i < Math.min(unloadedSamples.length, sampleLoadCount); ++i) {
+		const minIndex = unloadedSamples.reduce(
+			(acc, curr, idx, src) => src[acc] < curr ? acc : idx,
+			0
+		)
+		samples.push(unloadedSamples.splice(minIndex, 1)[0])
+	}
+	updateSampleListDisplay()
+}
+
 function updateSampleListDisplay() {
 	const height = remToPx(13.5)+1
 	// The first element on the screen
@@ -655,8 +672,16 @@ function updateSampleListDisplay() {
 	}
 
 	const bottom = document.createElement("div")
-	bottom.style.visible = "hidden"
-	bottom.style.height = ((samples.length-end)*height).toString() + "px"
+	if (unloadedSamples.length === 0) {
+		bottom.style.visible = "hidden"
+		bottom.style.height = ((samples.length-end)*height).toString() + "px"
+	} else {
+		bottom.style.height = ((samples.length-end)*height+remToPx(4)).toString() + "px"
+		bottom.appendChild(document.createElement("div"))
+		bottom.children[0].id = "load-samples-btn"
+		bottom.children[0].innerHTML = "load " + Math.min(unloadedSamples.length, sampleLoadCount) + " more"
+		bottom.children[0].addEventListener("click", loadSamples)
+	}
 
 	list.appendChild(top)
 	list.appendChild(bottom)
@@ -714,11 +739,12 @@ function filterUpdate() {
 		tags: getSelectedTags(),
 		categories: getSelectedCategories()
 	})
-	hiddenSamples = [...hiddenSamples, ...samples]
+	hiddenSamples = [...hiddenSamples, ...samples, ...unloadedSamples]
+	sampleLimit = sampleLoadCount
 	samples = []
 	for (let i = 0; i < hiddenSamples.length; ++i) {
 		if (passesFilter(hiddenSamples[i], filter)) {
-			samples.push(hiddenSamples.splice(i, 1)[0])
+			addSample(hiddenSamples.splice(i, 1)[0])
 			--i
 		}
 	}
@@ -726,13 +752,35 @@ function filterUpdate() {
 	updateSampleListDisplay()
 }
 
+function addSample(sampleInfo) {
+	const index = samples.findIndex( sample => ordering(sample, sampleInfo) > 0 )
+	if (samples.length === 0 || index !== -1 && index < sampleLimit) {
+		samples.splice(index, 0, sampleInfo)
+		if (samples.length > sampleLimit) {
+			unloadedSamples.push(samples.pop())
+		}
+		updateSampleListDisplay()
+	} else {
+		unloadedSamples.push(sampleInfo)
+	}
+}
+
+// maximum number of samples
+let sampleLimit = sampleLoadCount
 ipcRenderer.on("add-sample", (e, sampleInfo) => {
 	if (new RegExp(document.getElementById("searchbar-text").value).source
 		!== sampleInfo.match) { return }
 	sampleInfo.selected = false
 	sampleInfo.duration = 0
-	samples.splice(samples.findIndex( sample => ordering(sample, sampleInfo) > 0 ), 0, sampleInfo)
-	updateSampleListDisplay()
+	const filter = Object.freeze({
+		tags: getSelectedTags(),
+		categories: getSelectedCategories()
+	})
+	if (!passesFilter(sampleInfo, filter)) {
+		hiddenSamples.push(sampleInfo)
+		return
+	}
+	addSample(sampleInfo)
 })
 
 ipcRenderer.on("file-data", (e, fileData) => {
