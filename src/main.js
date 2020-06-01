@@ -31,6 +31,7 @@ const settings = require("./settings.json")
 settings.sampleDirectories = settings.sampleDirectories || []
 settings.tags = settings.tags || []
 settings.categories = settings.categories || []
+settings.sampleLimit = settings.sampleLimit || 100
 
 let window;
 function createWindow() {
@@ -146,6 +147,18 @@ ipcMain.on("updateSampleDirs", (event, paths) => {
 		console.log(`updated sampleDirectories in 'settings.json' to [${paths}]`)
 	})
 	event.returnValue = "" // for if this was triggered via a sync action
+})
+
+ipcMain.once("getSampleLimit", (event) => {
+	event.sender.send("sampleLimit", settings.sampleLimit)
+})
+
+ipcMain.on("updateSampleLimit", (event, limit) => {
+	settings.sampleLimit = limit
+	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), (e) => {
+		if (e) return console.log(e)
+		console.log(`updated sampleLimit in 'settings.json' to ${limit}`)
+	})
 })
 
 function isAudioFile(fileName) {

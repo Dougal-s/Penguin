@@ -7,7 +7,7 @@ gainNode.gain.value = 1
 gainNode.connect(audioCtx.destination)
 
 // number of samples to load at one time
-const sampleLoadCount = 100
+let sampleLoadCount = 100
 
 let samples = []
 // samples that havent been loaded. The ordering is undefined
@@ -636,7 +636,7 @@ function updateSample(sample, sampleInfo) {
 }
 
 function loadSamples() {
-	sampleLimit += sampleLoadCount
+	maxSamples += sampleLoadCount
 	for (let i = 0; i < Math.min(unloadedSamples.length, sampleLoadCount); ++i) {
 		const minIndex = unloadedSamples.reduce(
 			(acc, curr, idx, src) => src[acc] < curr ? acc : idx,
@@ -740,7 +740,7 @@ function filterUpdate() {
 		categories: getSelectedCategories()
 	})
 	hiddenSamples = [...hiddenSamples, ...samples, ...unloadedSamples]
-	sampleLimit = sampleLoadCount
+	maxSamples = sampleLoadCount
 	samples = []
 	for (let i = 0; i < hiddenSamples.length; ++i) {
 		if (passesFilter(hiddenSamples[i], filter)) {
@@ -754,9 +754,9 @@ function filterUpdate() {
 
 function addSample(sampleInfo) {
 	const index = samples.findIndex( sample => ordering(sample, sampleInfo) > 0 )
-	if (samples.length === 0 || index !== -1 && index < sampleLimit) {
+	if (samples.length === 0 || index !== -1 && index < maxSamples) {
 		samples.splice(index, 0, sampleInfo)
-		if (samples.length > sampleLimit) {
+		if (samples.length > maxSamples) {
 			unloadedSamples.push(samples.pop())
 		}
 
@@ -782,7 +782,7 @@ function addSample(sampleInfo) {
 }
 
 // maximum number of samples
-let sampleLimit = sampleLoadCount
+let maxSamples = sampleLoadCount
 ipcRenderer.on("add-sample", (e, sampleInfo) => {
 	if (new RegExp(document.getElementById("searchbar-text").value).source
 		!== sampleInfo.match) { return }

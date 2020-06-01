@@ -67,3 +67,23 @@ ipcRenderer.once("sampleDirectories", (event, sampleDirectories) => {
    updateSamples()
 })
 ipcRenderer.send("getSampleDirectories")
+
+
+const sampleLimitInput = document.getElementById("sample-limit")
+sampleLimitInput.addEventListener("change", (e) => {
+	e.target.classList.remove("remove")
+	// if it is 0 or undefined
+	if (!e.target.value || isNaN(e.target.value)) {
+		e.target.classList.add("error")
+		e.target.focus()
+	}
+
+	sampleLoadCount = Number(e.target.value)
+	ipcRenderer.send("updateSampleLimit", sampleLoadCount)
+})
+
+ipcRenderer.once("sampleLimit", (e, limit) => {
+	sampleLoadCount = limit
+	sampleLimitInput.value = limit
+})
+ipcRenderer.send("getSampleLimit")

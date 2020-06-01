@@ -26,6 +26,33 @@
     padding: 5rem;
 }
 
+#settings-content-box p {
+    line-height: calc(1.5rem + 4px);
+    height: auto;
+    margin: 0;
+    display: inline-block;
+	font-size: 1.1rem;
+	color: var(--text-color-3);
+}
+
+#settings-content-box input {
+	background-color: var(--bg-color-2);
+	color: var(--text-color-4);
+
+	line-height: 1rem;
+    border: 2px solid var(--bg-color-5);
+    margin: 0;
+    box-sizing: border-box;
+}
+
+#settings-content-box input:focus {
+    border: 2px solid #0050C0;
+}
+
+#settings-content-box input.error {
+    border: 2px solid #C00000;
+}
+
 #close-settings {
     position: absolute;
     top: 0;
@@ -47,23 +74,10 @@
     width: 100%;
 }
 
-#sample-dirs-setting > p {
-    line-height: calc(1.5rem + 4px);
-    height: auto;
-    margin: 0;
-    font-size: 1.1rem;
-    display: inline-block;
-    color: var(--text-color-3);
-}
-
 #sample-dirs {
     margin: 0;
     padding: 0;
     list-style: none;
-}
-
-#sample-dirs > li {
-
 }
 
 #sample-dirs > .sample-dir {
@@ -72,24 +86,10 @@
 }
 
 .sample-dir > .sample-dir-path {
-    line-height: 1rem;
     text-overflow: ellipsis;
     width: 100%;
-    margin: 0;
-    color: var(--text-color-4);
     padding: 0.25rem 2.5rem 0.25rem 1rem;
-    background-color: var(--bg-color-2);
     border-radius: 1rem;
-    box-sizing: border-box;
-    border: 2px solid var(--bg-color-5);
-}
-
-.sample-dir > .sample-dir-path:focus {
-    border: 2px solid #0050C0;
-}
-
-.sample-dir > .sample-dir-path.error {
-    border: 2px solid #C00000;
 }
 
 .sample-dir > svg {
@@ -117,4 +117,19 @@
 #add-dir:hover {
     fill: var(--text-color-4);
     cursor: pointer;
+}
+
+
+#sample-limit-setting {
+
+}
+
+#sample-limit-setting > p {
+	margin-right: 0.5rem;
+}
+
+#sample-limit {
+	border-radius: 0.25rem;
+	width: 4rem;
+    padding: 0.25rem 0.5rem;
 }
