@@ -1,9 +1,10 @@
 'use strict';
 const {app, BrowserWindow, ipcMain} = require("electron")
 const fs = require("fs")
+const path = require("path")
 const sqlite3 = require('sqlite3')
 const db = new sqlite3.Database(
-	"./files.sqlite3",
+	path.join(app.getPath("userData") + "files.sqlite3"),
 	sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
 	(e) => {
 		if (e) { throw "failed to open sqlite3 database!: " + e }
@@ -25,9 +26,9 @@ const db = new sqlite3.Database(
 		})
 	}
 )
-
-fs.writeFileSync("./settings.json", "{}", {flag: "w+"})
-const settings = require("./settings.json")
+const settingsPath = path.join(app.getPath("userData") + "settings.json")
+fs.writeFileSync(settingsPath, "{}", {flag: "w+"})
+const settings = require(settingsPath)
 settings.sampleDirectories = settings.sampleDirectories || []
 settings.tags = settings.tags || []
 settings.categories = settings.categories || []
@@ -110,7 +111,7 @@ ipcMain.once("getTags", (event) => {
 
 ipcMain.on("addTag", (event, tag) => {
 	settings.tags.push(tag)
-	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), (e) => {
+	fs.writeFile(settingsPath, JSON.stringify(settings, null, "\t"), (e) => {
 		if (e) return console.log(e)
 		console.log(`added tag '${tag}' to 'settings.json'`)
 	})
@@ -118,7 +119,7 @@ ipcMain.on("addTag", (event, tag) => {
 
 ipcMain.on("removeTag", (event, tag) => {
 	settings.tags.splice(settings.tags.indexOf(tag), 1)
-	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), (e) => {
+	fs.writeFile(settingsPath, JSON.stringify(settings, null, "\t"), (e) => {
 		if (e) return console.log(e)
 		console.log(`removed tag '${tag}' in 'settings.json'`)
 	})
@@ -142,7 +143,7 @@ ipcMain.once("getSampleDirectories", (event) => {
 
 ipcMain.on("updateSampleDirs", (event, paths) => {
 	settings.sampleDirectories = paths;
-	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), (e) => {
+	fs.writeFile(settingsPath, JSON.stringify(settings, null, "\t"), (e) => {
 		if (e) return console.log(e)
 		console.log(`updated sampleDirectories in 'settings.json' to [${paths}]`)
 	})
@@ -155,7 +156,7 @@ ipcMain.once("getSampleLimit", (event) => {
 
 ipcMain.on("updateSampleLimit", (event, limit) => {
 	settings.sampleLimit = limit
-	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), (e) => {
+	fs.writeFile(settingsPath, JSON.stringify(settings, null, "\t"), (e) => {
 		if (e) return console.log(e)
 		console.log(`updated sampleLimit in 'settings.json' to ${limit}`)
 	})
@@ -169,7 +170,6 @@ function isAudioFile(fileName) {
 }
 
 let walkCount = 0;
-const path = require("path")
 function walk(dir, match, walkId) {
 	if (walkId !== walkCount) return
 	fs.readdir(dir, (e, files) => {
