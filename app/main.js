@@ -4,7 +4,7 @@ const fs = require("fs")
 const path = require("path")
 const sqlite3 = require('sqlite3')
 const db = new sqlite3.Database(
-	path.join(app.getPath("userData") + "files.sqlite3"),
+	path.join(app.getPath("userData"), "files.sqlite3"),
 	sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
 	(e) => {
 		if (e) { throw "failed to open sqlite3 database!: " + e }
@@ -26,7 +26,7 @@ const db = new sqlite3.Database(
 		})
 	}
 )
-const settingsPath = path.join(app.getPath("userData") + "settings.json")
+const settingsPath = path.join(app.getPath("userData"), "settings.json")
 fs.writeFileSync(settingsPath, "{}", {flag: "w+"})
 const settings = require(settingsPath)
 settings.sampleDirectories = settings.sampleDirectories || []
