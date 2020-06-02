@@ -162,7 +162,7 @@ body {
     display: none;
     left: 50%;
     top: 50%;
-    transform: translateX(-50%) translateY(-50%);
+    transform: translateX(-50%, -50%);
     width: 0.5rem;
     height: 0.5rem;
     background-color: var(--bg-color-3);
@@ -255,7 +255,7 @@ body {
 	padding: 0.5rem 1rem;
 	border-radius: 0.25rem;
 	left: 50%;
-	transform: translateX(-50%) translateY(50%);
+	transform: translate(-50%, 50%);
 	user-select: none;
 }
 
@@ -403,7 +403,7 @@ body {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translateX(-50%) translateY(-50%);
+    transform: translate(-50%, -50%);
     height: 2rem;
     filter: brightness(75%) drop-shadow(0 0 10px rgba(0,0,0,0.2));
 }
