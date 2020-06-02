@@ -66,7 +66,6 @@ app.on("activate", () => {
 
 app.on("quit", () => { db.close() })
 
-
 ipcMain.on("ondragstart", (event, filePaths) => {
 	event.sender.startDrag({
 		files: filePaths,
@@ -185,7 +184,7 @@ function walk(dir, match, walkId) {
 
 				if (!isAudioFile(filePath)) return
 
-				if (!match || match.test(path.basename(filePath))) {
+				if (match.test(path.basename(filePath))) {
 					db.get(`SELECT categories, tags from files where sample_path = "${filePath}"`, (err, row) => {
 						const sampleCategories = typeof row !== "undefined" && row.categories ? row.categories.split(",") : [];
 						const sampleTags = typeof row !== "undefined" && row.tags ? row.tags.split(",") : [];
