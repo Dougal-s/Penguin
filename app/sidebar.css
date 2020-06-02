@@ -108,7 +108,8 @@
 
 #tag-search-bar > input {
     flex: auto;
-    color: var(--text-color-3);
+	opacity: 75%;
+    color: var(--text-color-4);
 
     display: block;
     height: 1.1875rem;
@@ -119,6 +120,11 @@
     box-sizing: content-box;
     min-width: 4rem;
 }
+
+#tag-search-bar > input::-webkit-input-placeholder {
+	color: var(--text-color-3);
+}
+
 
 #tag-search-bar > svg {
     flex: none;
