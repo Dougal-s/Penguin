@@ -39,19 +39,18 @@ settings.sampleLimit = settings.sampleLimit || 100
 let window;
 function createWindow() {
 	window = new BrowserWindow({
-		width: 1300,
+		width: 900,
 		height: 800,
 		minWidth: 500,
 		minHeight: 300,
 		icon: "penguin-development.png",
+		autoHideMenuBar: true,
 		webPreferences: {
 			nodeIntegration: true
 		}
 	});
 
 	window.loadFile("index.html")
-
-	window.webContents.openDevTools()
 	window.removeMenu()
 }
 

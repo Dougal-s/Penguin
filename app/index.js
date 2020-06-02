@@ -324,3 +324,66 @@ window.addEventListener("mousemove", e => {
 })
 
 window.addEventListener("mouseup", e => { gainSliderMoving = false })
+
+// create app Menu
+
+const appMenu = Menu.buildFromTemplate([
+	{
+		label: "File",
+		submenu: [
+			{
+				label: "Close Window",
+				role: "quit"
+			}
+		]
+	},
+	{
+		label: "Edit",
+		submenu: [
+			{
+				label: "Copy Path",
+				click() {
+					const paths = samples.filter(sample => sample.selected).map(sample => sample.filePath).join()
+					navigator.clipboard.writeText(paths)
+				}
+			},
+			{
+				label: "Settings",
+				click() { settings.style.display = "block" }
+			}
+		]
+	},
+	{
+		label: "View",
+		submenu: [
+			{
+				label: "Reload",
+				role: "reload"
+			},
+			{
+				label: "Toggle Menubar",
+				click() {
+					if (remote.getCurrentWindow().menuBarVisible) {
+						remote.getCurrentWindow().setMenuBarVisibility(false)
+					} else {
+						remote.getCurrentWindow().setMenuBarVisibility(true)
+					}
+				}
+			},
+			{
+				label: "Toggle Dev Tools",
+				role: "toggleDevTools"
+			}
+		]
+	},
+	{
+		label: "Help",
+		submenu: [
+			{
+				label: "About",
+				click() { about.style.display = "block" }
+			}
+		]
+	}
+])
+Menu.setApplicationMenu(appMenu)
