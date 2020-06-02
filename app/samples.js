@@ -343,8 +343,6 @@ window.addEventListener("keydown", (e) => {
 			case "Space":
 			case "Enter":
 				e.preventDefault()
-				// toggle playback for all the selected smaples
-				const selectedSamples = samples.filter(sample => sample.selected)
 				for (const sample of samples) {
 					if (!sample.buffer) { continue }
 					if (!sample.selected) {
