@@ -1,0 +1,25 @@
+{
+  "name": "penguin",
+  "description": "An electron based sample browser",
+  "version": "1.0.0",
+  "homepage": "https://github.com/Dougal-s/Penguin",
+  "author": {
+    "name": "Dougal Stewart",
+    "email": "dougal.koji@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dougal-s/Penguin.git"
+  },
+  "main": "main.js",
+  "keywords": [
+    "Audio"
+  ],
+  "devDependencies": {
+    "electron": "^8.2.5",
+    "electron-builder": "^22.6.1"
+  },
+  "dependencies": {
+    "sqlite3": "^4.2.0"
+  }
+}
