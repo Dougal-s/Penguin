@@ -185,15 +185,19 @@ function walk(dir, match, walkId) {
 				if (!isAudioFile(filePath)) return
 
 				if (match.test(path.basename(filePath))) {
-					db.get(`SELECT categories, tags from files where sample_path = "${filePath}"`, (err, row) => {
+					db.get(`SELECT categories, tags from files where sample_path = "${filePath}"`, async(err, row) => {
 						const sampleCategories = typeof row !== "undefined" && row.categories ? row.categories.split(",") : [];
 						const sampleTags = typeof row !== "undefined" && row.tags ? row.tags.split(",") : [];
-						window.send("add-sample", {
-							filePath: filePath,
-							categories: sampleCategories,
-							tags: sampleTags,
-							match: match.source
-						})
+						try {
+							await window.send("add-sample", {
+								filePath: filePath,
+								categories: sampleCategories,
+								tags: sampleTags,
+								match: match.source
+							})
+						} catch (err) {
+							console.log(err)
+						}
 					})
 				}
 			})
@@ -223,10 +227,14 @@ ipcMain.on("update-samples", (event, match) => {
 })
 
 ipcMain.on("read-file", (event, filePath) => {
-	fs.readFile(filePath, (e, buffer) => {
-		event.sender.send("file-data", {
-			filePath: filePath,
-			buffer: buffer
-		})
+	fs.readFile(filePath, async(e, buffer) => {
+		try {
+			await event.sender.send("file-data", {
+				filePath: filePath,
+				buffer: buffer
+			})
+		} catch(err) {
+			console.log(err)
+		}
 	})
 })
