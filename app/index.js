@@ -7,8 +7,17 @@
  * index.js
  */
 'use strict';
-const { remote, ipcRenderer } = require("electron")
+const { remote, ipcRenderer, shell } = require("electron")
 const { dialog, Menu } = remote
+
+const about = document.getElementById("about")
+document.getElementById("close-about").addEventListener("click", () => {
+	about.style.display = "none"
+})
+
+document.getElementById("github-link").addEventListener("click", () => {
+	shell.openExternal("https://github.com/Dougal-s/Penguin")
+})
 
 const sidebar = document.getElementById("sidebar")
 const mainPanel = document.getElementById("main-panel")

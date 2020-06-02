@@ -7,12 +7,25 @@
 		<link rel="stylesheet" href="styles.css">
 		<link rel="stylesheet" href="sidebar.css">
 		<link rel="stylesheet" href="settings.css">
+		<link rel="stylesheet" href="about.css">
 		<script src="index.js" defer></script>
 		<script src="samples.js" defer></script>
 		<script src="settings.js" defer></script>
 		<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
 	</head>
 	<body>
+		<div id="about" style="display:none;">
+			<div id="about-content-box">
+				<svg id="close-about" viewBox="0 0 24 24" ><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+				<div id="about-name">
+					<img src="penguin-development.svg">
+					<h1>Penguin</h1>
+				</div>
+				<p>v1.0.0</p>
+				<p>An Electron based sample browser</p>
+				<a id="github-link">Github</a>
+			</div>
+		</div>
 		<div id="settings" style="display: none">
 			<div id="settings-content-box">
 				<svg id="close-settings" viewBox="0 0 24 24" ><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
