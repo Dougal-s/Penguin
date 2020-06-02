@@ -48,6 +48,12 @@
 	margin: 0 0 0 1rem;
 	top: 0;
 	position: absolute;
+	transition: 0.5s color;
+}
+
+#about-content-box > div > h1:hover {
+	cursor: pointer;
+	color: #e0e0e0;
 }
 
 #about-content-box a {

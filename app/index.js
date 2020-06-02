@@ -11,6 +11,10 @@ const { remote, ipcRenderer, shell } = require("electron")
 const { dialog, Menu } = remote
 
 const about = document.getElementById("about")
+about.children[0].children[1].addEventListener("click", () => {
+	shell.openExternal("https://github.com/Dougal-s/Penguin")
+})
+
 document.getElementById("close-about").addEventListener("click", () => {
 	about.style.display = "none"
 })
