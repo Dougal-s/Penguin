@@ -13,6 +13,7 @@
   },
   "scripts": {
     "start": "electron ./app",
+	"profile": "electron --inspect=5858 ./app",
     "postinstall": "install-app-deps",
 	"build": "electron-builder build"
   },
