@@ -27,7 +27,9 @@ const db = new sqlite3.Database(
 	}
 )
 const settingsPath = path.join(app.getPath("userData"), "settings.json")
-fs.writeFileSync(settingsPath, "{}", {flag: "w+"})
+try {
+	fs.writeFileSync(settingsPath, "{}", {flag: "wx"})
+} catch(error) {}
 const settings = require(settingsPath)
 settings.sampleDirectories = settings.sampleDirectories || []
 settings.tags = settings.tags || []
