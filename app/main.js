@@ -79,7 +79,7 @@ ipcMain.once("getCategories", (event) => {
 
 ipcMain.on("addCategory", (event, category) => {
 	settings.categories.push(category)
-	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), (e) => {
+	fs.writeFile(settingsPath, JSON.stringify(settings, null, "\t"), (e) => {
 		if (e) return console.log(e)
 		console.log(`added category '${category}' to 'settings.json'`)
 	})
@@ -87,7 +87,7 @@ ipcMain.on("addCategory", (event, category) => {
 
 ipcMain.on("removeCategory", (event, category) => {
 	settings.categories.splice(settings.categories.indexOf(category), 1)
-	fs.writeFile("settings.json", JSON.stringify(settings, null, "\t"), (e) => {
+	fs.writeFile(settingsPath, JSON.stringify(settings, null, "\t"), (e) => {
 		if (e) return console.log(e)
 		console.log(`removed category '${category}' in 'settings.json'`)
 	})
