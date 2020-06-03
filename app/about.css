@@ -14,8 +14,6 @@
 #about-content-box {
     background-color: transparent;
 
-    max-width: 50rem;
-
     position: absolute;
 
     top: 50%;
@@ -40,7 +38,6 @@
 }
 
 #about-content-box > div > h1 {
-	position: relative;
 	display: inline-block;
 	font-weight: 300;
 	line-height: 4rem;
