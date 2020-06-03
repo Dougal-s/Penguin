@@ -1,42 +1,31 @@
 {
-	"name": "penguin",
-	"description": "An electron based sample browser",
-	"version": "1.0.0",
-	"homepage": "https://github.com/Dougal-s/Penguin",
-	"author": {
-		"name": "Dougal Stewart",
-		"email": "dougal.koji@gmail.com"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/Dougal-s/Penguin.git"
-	},
 	"scripts": {
 		"start": "electron ./app",
 		"profile": "electron --inspect=5858 ./app",
-		"postinstall": "install-app-deps",
+		"postinstall": "electron-builder install-app-deps",
 		"build": "electron-builder build"
 	},
 	"build": {
-		"appId": "com.dougal.penguin",
-		"productName": "Penguin",
-		"directories": {
-			"output": "build",
-			"app": "app"
-		},
+		"appId": "com.dougal.penguinProject",
+		"productName": "Penguin Project",
+		"directories": {},
 		"mac": {
 			"category": "public.app-category.music",
-			"target": "dmg",
-			"icon": "penguin-development.icns"
+			"target": "dmg"
 		},
-		"win": {
-			"icon": "penguin-development.ico"
-		},
+		"win": {},
 		"linux": {
-			"target": ["appImage", "deb", "tar.gz"],
+			"target": [
+				"appImage",
+				"deb",
+				"tar.gz"
+			],
 			"synopsis": "Electron based sample browser",
 			"category": "Audio"
 		}
 	},
-	"keywords": [ "Audio" ]
+	"devDependencies": {
+		"electron": "^8.2.5",
+		"electron-builder": "^22.6.1"
+	}
 }
