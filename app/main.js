@@ -43,7 +43,6 @@ function createWindow() {
 		height: 800,
 		minWidth: 500,
 		minHeight: 300,
-		icon: "penguin-development.png",
 		autoHideMenuBar: true,
 		webPreferences: {
 			nodeIntegration: true
@@ -177,6 +176,7 @@ function walk(dir, match, walkId) {
 			const filePath = path.join(dir, file)
 
 			fs.stat(filePath, (e, stats) => {
+				if (e) { console.log(e) }
 				if (stats.isDirectory()) {
 					walk(filePath, match, walkId)
 					return
