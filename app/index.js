@@ -289,10 +289,10 @@ function getSelectedTags() { return tagInfos.filter(tag => tag.selected) }
 
 ipcRenderer.once("tags", (event, tags) => {
 	for (const tag of tags) {
-		tagInfos.push(Object.seal({
+		tagInfos.push({
 			name: tag,
 			selected: false
-		}))
+		})
 		createTagElement(tagInfos[tagInfos.length-1])
 	}
 })
