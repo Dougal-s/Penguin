@@ -135,6 +135,17 @@ function createSampleTagElement(tagList, sampleInfo, tag) {
 	tagList.appendChild(tagElem)
 }
 
+function removeSampleFromDisplay(sample) {
+	const idx = Number(sample.id)
+	if (samples[idx].audio) { stopPlayback(samples[idx]) }
+	sample.remove()
+
+	hiddenSamples.push(samples.splice(idx, 1)[0])
+	updateSampleListDisplay()
+}
+
+// Modify Sample Tags
+
 function setSampleTags(tagList, sampleInfo) {
 	tagList.innerHTML = ""
 	for (const tag of sampleInfo.tags) {
@@ -142,7 +153,8 @@ function setSampleTags(tagList, sampleInfo) {
 	}
 }
 
-function addTag(tagList, sampleInfo, tag) {
+function addTag(sampleInfo, tag) {
+	const tagList = sampleInfo.DOMelem.getElementsByClassName("tag-list")[0]
 	if (sampleInfo.tags.includes(tag)) { return }
 	sampleInfo.tags.push(tag)
 	ipcRenderer.send("update-sample-info", {
@@ -152,15 +164,6 @@ function addTag(tagList, sampleInfo, tag) {
 	})
 	createSampleTagElement(tagList, sampleInfo, tag)
 	setSampleContextMenu(sampleInfo)
-}
-
-function removeSampleFromDisplay(sample) {
-	const idx = Number(sample.id)
-	if (samples[idx].audio) { stopPlayback(samples[idx]) }
-	sample.remove()
-
-	hiddenSamples.push(samples.splice(idx, 1)[0])
-	updateSampleListDisplay()
 }
 
 function removeTag(sampleInfo, tag) {
@@ -179,6 +182,8 @@ function removeTag(sampleInfo, tag) {
 	Array.from(tagList.children).find(elem => elem.innerHTML === tag).remove()
 	setSampleContextMenu(sampleInfo)
 }
+
+// Modify Sample Categories
 
 function addCategory(sampleInfo, category) {
 	if (sampleInfo.categories.includes(category)) { return }
@@ -241,7 +246,7 @@ function setSampleContextMenu(sampleInfo) {
 			submenu: tagInfos.map(tag => ({
 				label: tag.name,
 				click() {
-					addTag(tagList, sampleInfo, tag.name)
+					addTag(sampleInfo, tag.name)
 				}
 			}))
 		},
@@ -505,7 +510,7 @@ function createSample(sampleInfo, idx) {
 	sample.children[0].addEventListener("drop", function(e) {
 		if (dragEventType === dragTypes.tag) {
 			this.children[0].children[1].lastChild.remove()
-			addTag(this.children[0].children[1], sampleInfo, e.dataTransfer.getData("tag"))
+			addTag(sampleInfo, e.dataTransfer.getData("tag"))
 		}
 	})
 
@@ -622,13 +627,13 @@ function updateDisplayedInfo(sampleInfo) {
 		+ ("0"+(duration%60).toString()).slice(-2)
 }
 
-function updateSample(sample, sampleInfo) {
+function updateSample(sampleInfo) {
 	if (sampleInfo.selected) {
-		if (!sample.classList.contains("selected-sample")) {
-			sample.classList.add("selected-sample")
+		if (!sampleInfo.DOMelem.classList.contains("selected-sample")) {
+			sampleInfo.DOMelem.classList.add("selected-sample")
 		}
 	} else {
-		sample.classList.remove("selected-sample")
+		sampleInfo.DOMelem.classList.remove("selected-sample")
 	}
 }
 
@@ -690,7 +695,7 @@ function updateSampleListDisplay() {
 		}
 		if (samples[i].DOMelem) {
 			samples[i].DOMelem.id = i
-			updateSample(samples[i].DOMelem, samples[i])
+			updateSample(samples[i])
 			list.insertBefore(samples[i].DOMelem, bottom)
 		} else {
 			list.insertBefore(createSample(samples[i], i), bottom)
