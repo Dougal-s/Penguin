@@ -743,13 +743,20 @@ function filterUpdate() {
 		tags: getSelectedTags(),
 		categories: getSelectedCategories()
 	})
-	hiddenSamples = [...hiddenSamples, ...samples, ...unloadedSamples]
 	maxSamples = sampleLoadCount
-	samples = []
-	for (let i = 0; i < hiddenSamples.length; ++i) {
+	hiddenSamples = [...hiddenSamples, ...unloadedSamples]
+	unloadedSamples = []
+	let hiddenLength = hiddenSamples.length
+	for (let i = 0; i < samples.length; ++i) {
+		if (!passesFilter(samples[i], filter)) {
+			hiddenSamples.push(samples.splice(i, 1)[0])
+			--i
+		}
+	}
+	for (let i = 0; i < hiddenLength; ++i) {
 		if (passesFilter(hiddenSamples[i], filter)) {
 			addSample(hiddenSamples.splice(i, 1)[0])
-			--i
+			--i; --hiddenLength;
 		}
 	}
 	updateOrdering()
