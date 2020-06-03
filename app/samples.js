@@ -711,6 +711,7 @@ function updateSamples() {
 	samples = []
 	hiddenSamples = []
 	unloadedSamples = []
+	maxSamples = sampleLoadCount
 	updateSampleListDisplay()
 	ipcRenderer.send("update-samples", match)
 }
@@ -753,7 +754,7 @@ function filterUpdate() {
 
 function addSample(sampleInfo) {
 	const index = samples.findIndex( sample => ordering(sample, sampleInfo) > 0 )
-	if (samples.length === 0 || index !== -1 && index < maxSamples) {
+	if (samples.length < maxSamples || index !== -1 && index < maxSamples) {
 		samples.splice(index, 0, sampleInfo)
 		if (samples.length > maxSamples) {
 			unloadedSamples.push(samples.pop())
