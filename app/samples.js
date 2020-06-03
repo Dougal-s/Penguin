@@ -710,6 +710,7 @@ function updateSamples() {
 	}
 	samples = []
 	hiddenSamples = []
+	unloadedSamples = []
 	updateSampleListDisplay()
 	ipcRenderer.send("update-samples", match)
 }
