@@ -11,15 +11,19 @@
 		"directories": {},
 		"mac": {
 			"category": "public.app-category.music",
-			"target": "dmg"
+			"target": "dmg",
+			"icon": "./build/icon.icns"
 		},
-		"win": {},
+		"win": {
+			"icon": "./build/icon.ico"
+		},
 		"linux": {
 			"target": [
 				"appImage",
 				"deb",
 				"tar.gz"
 			],
+			"icon": "./build/icon.icns",
 			"synopsis": "Electron based sample browser",
 			"category": "Audio"
 		}
