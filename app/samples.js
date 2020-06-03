@@ -759,26 +759,31 @@ function filterUpdate() {
 			--i; --hiddenLength;
 		}
 	}
-	updateOrdering()
 	updateSampleListDisplay()
 }
 
+// Returns true if the sample has been added to the loaded samples
 function addSample(sampleInfo) {
 	const index = samples.findIndex( sample => ordering(sample, sampleInfo) > 0 )
 	if (samples.length < maxSamples || index !== -1 && index < maxSamples) {
-		samples.splice(index, 0, sampleInfo)
-		if (samples.length > maxSamples) {
-			unloadedSamples.push(samples.pop())
+		const height = remToPx(13.5)+1
+
+		if (index === -1) {
+			samples.push(sampleInfo)
+		} else {
+			samples.splice(index, 0, sampleInfo)
+			if (samples.length > maxSamples) {
+				unloadedSamples.push(samples.pop())
+			}
+			// The first element on the screen
+			const start = Math.min(samples.length-1, Math.floor(sampleList.scrollTop/height))
+			const top = sampleList.firstElementChild
+			if (index < start) {
+				top.style.height = toString(Number(top.style.height) + height) + "px"
+				return
+			}
 		}
 
-		const height = remToPx(13.5)+1
-		// The first element on the screen
-		const start = Math.min(samples.length-1, Math.floor(sampleList.scrollTop/height))
-		const top = sampleList.firstElementChild
-		if (index < start) {
-			top.style.height = toString(Number(top.style.height) + height) + "px"
-			return
-		}
 		// find first element that is below the screen
 		const end = Math.min(samples.length, Math.ceil((sampleList.scrollTop+sampleList.offsetHeight)/height))
 		const bottom = sampleList.lastElementChild
@@ -786,9 +791,10 @@ function addSample(sampleInfo) {
 			bottom.style.height = toString(Number(bottom.style.height) + height) + "px"
 			return
 		}
-		updateSampleListDisplay()
+		return true
 	} else {
 		unloadedSamples.push(sampleInfo)
+		return false
 	}
 }
 
@@ -806,7 +812,7 @@ ipcRenderer.on("add-sample", (e, sampleInfo, match) => {
 		hiddenSamples.push(sampleInfo)
 		return
 	}
-	addSample(sampleInfo)
+	if (addSample(sampleInfo)) { updateSampleListDisplay() }
 })
 
 ipcRenderer.on("file-data", (e, fileData) => {
