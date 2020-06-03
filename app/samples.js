@@ -781,9 +781,9 @@ function addSample(sampleInfo) {
 
 // maximum number of samples
 let maxSamples = sampleLoadCount
-ipcRenderer.on("add-sample", (e, sampleInfo) => {
+ipcRenderer.on("add-sample", (e, sampleInfo, match) => {
 	if (new RegExp(document.getElementById("searchbar-text").value).source
-		!== sampleInfo.match) { return }
+		!== match) { return }
 	sampleInfo.selected = false
 	sampleInfo.duration = 0
 	const filter = Object.freeze({

@@ -176,7 +176,10 @@ function walk(dir, match, walkId) {
 			const filePath = path.join(dir, file)
 
 			fs.stat(filePath, (e, stats) => {
-				if (e) { console.log(e) }
+				if (e) {
+					console.log(e)
+					return
+				}
 				if (stats.isDirectory()) {
 					walk(filePath, match, walkId)
 					return
@@ -192,9 +195,8 @@ function walk(dir, match, walkId) {
 							await window.send("add-sample", {
 								filePath: filePath,
 								categories: sampleCategories,
-								tags: sampleTags,
-								match: match.source
-							})
+								tags: sampleTags
+							}, match.source)
 						} catch (err) {
 							console.log(err)
 						}
