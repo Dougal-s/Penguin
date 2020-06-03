@@ -83,35 +83,34 @@ function returnSelectedPaths() {
 	return Array.from(samples.filter(info => info.selected), x => x.filePath)
 }
 
-function createWaveformPath(audioBuffer) {
-	const path = {
-		path: new Path2D(),
-		width: 1920.0,
-		height: remToPx(7.0)
-	}
-	const channelHeight = path.height/audioBuffer.numberOfChannels
-	// if the sample is too long then skip some points
-	const sampleStep = path.width/audioBuffer.length < 0.5 ? 2 : 1
-	const stepSize = path.width/audioBuffer.length
+function drawWaveform(sampleInfo) {
+	const canvas = sampleInfo.DOMelem.children[3].children[0]
+	const width = 1920.0
+	const height = remToPx(7.0)
 
-	for (let channel = 0; channel < audioBuffer.numberOfChannels; ++channel) {
-		const buffer = audioBuffer.getChannelData(channel)
-		path.path.moveTo(0, channelHeight*(channel + 0.5*(buffer[0]+1)))
-		for (let sample = 1; sample < audioBuffer.length; sample += sampleStep) {
-			path.path.lineTo(sample*stepSize, channelHeight*(channel + 0.5*(buffer[sample]+1)))
-			while (sample+1 < audioBuffer.length && buffer[sample] === buffer[sample+1]) { ++sample }
-		}
-	}
-	return Object.freeze(path)
-}
+	canvas.width = width
+	canvas.height = height
 
-function drawWaveform(canvas, path) {
-	canvas.width = path.width
-	canvas.height = path.height
 	const ctx = canvas.getContext("2d")
 	ctx.strokeStyle = "#B0B0B0"
 	ctx.strokeWidth = 1
-	ctx.stroke(path.path)
+	ctx.beginPath()
+
+	const channelHeight = height/sampleInfo.buffer.numberOfChannels
+	// if the sample is too long then skip some points
+	const sampleStep = width/sampleInfo.buffer.length < 0.5 ? 2 : 1
+	const stepSize = width/sampleInfo.buffer.length
+
+	for (let channel = 0; channel < sampleInfo.buffer.numberOfChannels; ++channel) {
+		const buffer = sampleInfo.buffer.getChannelData(channel)
+		ctx.moveTo(0, channelHeight*(channel + 0.5*(buffer[0]+1)))
+		for (let sample = 1; sample < sampleInfo.buffer.length; sample += sampleStep) {
+			ctx.lineTo(sample*stepSize, channelHeight*(channel + 0.5*(buffer[sample]+1)))
+			while (sample+1 < sampleInfo.buffer.length && buffer[sample] === buffer[sample+1]) { ++sample }
+		}
+	}
+
+	ctx.stroke()
 }
 
 const templateTag = document.getElementById("template-tag")
@@ -473,7 +472,7 @@ function createSample(sampleInfo, idx) {
 	setSampleTags(tagList, sampleInfo)
 
 	if (sampleInfo.path) {
-		drawWaveform(sample.children[0].children[3].children[0], sampleInfo.path)
+		drawWaveform(sampleInfo)
 	}
 
 	if (sampleInfo.audio) {
@@ -806,8 +805,7 @@ ipcRenderer.on("file-data", (e, fileData) => {
 		sample.buffer = Object.freeze(buffer)
 		sample.duration = buffer.duration
 		updateDisplayedInfo(sample)
-		sample.path = createWaveformPath(sample.buffer)
-		drawWaveform(sample.DOMelem.children[3].children[0], sample.path)
+		drawWaveform(sample)
 	}).catch(err => {
 		console.log(`failed to decode: '${fileData.filePath}'`)
 		const sample
