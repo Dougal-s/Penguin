@@ -704,7 +704,7 @@ function updateSampleListDisplay() {
 sampleList.addEventListener("scroll", updateSampleListDisplay)
 
 function updateSamples() {
-	const match = document.getElementById("searchbar-text").value
+	const match = searchBar.value
 	for (const elem of samples) {
 		if (elem.audio) { stopPlayback(elem) }
 	}
@@ -784,8 +784,7 @@ function addSample(sampleInfo) {
 // maximum number of samples
 let maxSamples = sampleLoadCount
 ipcRenderer.on("add-sample", (e, sampleInfo, match) => {
-	if (new RegExp(document.getElementById("searchbar-text").value).source
-		!== match) { return }
+	if (new RegExp(searchBar.value).source !== match) { return }
 	sampleInfo.selected = false
 	sampleInfo.duration = 0
 	const filter = Object.freeze({
@@ -804,7 +803,7 @@ ipcRenderer.on("file-data", (e, fileData) => {
 		const sample
 			= samples.find(sample => sample.filePath === fileData.filePath)
 		if (!sample) { return }
-		sample.buffer = buffer
+		sample.buffer = Object.freeze(buffer)
 		sample.duration = buffer.duration
 		updateDisplayedInfo(sample)
 		sample.path = createWaveformPath(sample.buffer)
