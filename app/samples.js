@@ -744,33 +744,18 @@ function filterUpdate() {
 		categories: getSelectedCategories()
 	})
 	maxSamples = sampleLoadCount
-	hiddenSamples = [...hiddenSamples, ...unloadedSamples]
+	hiddenSamples = [...samples, ...unloadedSamples, ...hiddenSamples]
+	hiddenSamples.sort(ordering)
+	samples = []
 	unloadedSamples = []
-	let hiddenLength = hiddenSamples.length
-	for (let i = 0; i < samples.length; ++i) {
-		if (!passesFilter(samples[i], filter)) {
-			hiddenSamples.push(samples.splice(i, 1)[0])
-			--i
-		}
-	}
-	for (let i = 0; i < hiddenLength; ++i) {
+	for (let i = 0; i < hiddenSamples.length; ++i) {
 		if (passesFilter(hiddenSamples[i], filter)) {
-			const sampleInfo = hiddenSamples.splice(i, 1)[0]
-			--i; --hiddenLength;
-
-			let index = samples.length
-			while (index--) {
-				if (ordering(samples[index], sampleInfo) <= 0) { break }
-			}
-			++index;
-			if (index < maxSamples) {
-				samples.splice(index, 0, sampleInfo)
-				if (samples.length > maxSamples) {
-					unloadedSamples.push(samples.pop())
-				}
+			if (samples.length === maxSamples) {
+				unloadedSamples.push(hiddenSamples.splice(i, 1)[0])
 			} else {
-				unloadedSamples.push(sampleInfo)
+				samples.push(hiddenSamples.splice(i, 1)[0])
 			}
+			--i;
 		}
 	}
 	updateSampleListDisplay()
