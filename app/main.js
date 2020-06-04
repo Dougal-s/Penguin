@@ -68,7 +68,7 @@ app.on("quit", () => { db.close() })
 ipcMain.on("ondragstart", (event, filePaths) => {
 	event.sender.startDrag({
 		files: filePaths,
-		icon: "icons/audio_file.png"
+		icon: path.join(__dirname, "icons/audio_file.png")
 	});
 });
 
