@@ -39,36 +39,37 @@ document.getElementById("delete-icon").addEventListener("click", () => {
 const moreActionsBtn = document.getElementById("more-actions")
 const moreActionsPanel = document.getElementById("more-actions-panel")
 let lastClickEvent;
+moreActionsPanel.addEventListener("click", (e) => lastClickEvent = e)
 moreActionsBtn.addEventListener("click", (e) => {
 	if (!moreActionsPanel.classList.contains("visible")) {
 		lastClickEvent = e
 		moreActionsPanel.classList.add("visible")
+
+		function closeMoreActionsPanel(event) {
+			if (event !== lastClickEvent) {
+				moreActionsPanel.classList.remove("visible")
+				window.removeEventListener("click", closeMoreActionsPanel)
+			}
+		}
+		window.addEventListener("click", closeMoreActionsPanel)
 	}
 })
 
-window.addEventListener("click", (e) => {
-	if (lastClickEvent !== e && moreActionsPanel.classList.contains("visible")) {
-		moreActionsPanel.classList.remove("visible")
-	}
-})
 
 // Reload samples
 document.getElementById("reload-button").addEventListener("click", updateSamples)
 
 // sample ordering
 document.getElementById("A-Z").addEventListener("change", () => {
-	ordering = orderings.AZ
-	updateOrdering()
+	updateOrdering(orderings.AZ)
 	updateSampleListDisplay()
 })
 document.getElementById("Z-A").addEventListener("change", () => {
-	ordering = orderings.ZA
-	updateOrdering()
+	updateOrdering(orderings.ZA)
 	updateSampleListDisplay()
 })
 document.getElementById("filepath").addEventListener("change", () => {
-	ordering = orderings.path
-	updateOrdering()
+	updateOrdering(orderings.path)
 	updateSampleListDisplay()
 })
 
@@ -77,7 +78,12 @@ function getFileName(filepath) {
 }
 
 // sorts the samples using ordering
-function updateOrdering() { samples.sort(ordering) }
+function updateOrdering(newOrdering) {
+	ordering = newOrdering
+	samples = [...samples, ...unloadedSamples]
+	samples.sort(ordering)
+	unloadedSamples = samples.splice(maxSamples)
+}
 
 function returnSelectedPaths() {
 	return Array.from(samples.filter(info => info.selected), x => x.filePath)
