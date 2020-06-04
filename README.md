@@ -8,7 +8,6 @@ A simple sample browser made with electron
 * [Getting Started](#getting-started)
 	* [Prerequisites](#prerequisites)
 	* [Installing](#installing)
-	* [Usage](#usage)
 
 ## Getting Started
 Prebuilt binaries can be found under [releases](https://github.com/Dougal-s/Penguin/releases)
@@ -22,7 +21,21 @@ sudo apt install git npm
 
 ```
 ### Installing
-// TODO: finish this section
+First clone the repository by running:
+```
+git clone https://github.com/Dougal-s/Penguin.git
+cd Penguin
+```
+Install the required dependencies and build the installer by running:
+```
+npm install
+npm run build
+```
+Locate and run the execute the installer located in dist.
+
+Penguin can also be run by without being installed for development purposes by executing:
+```
+npm start
+```
 
 ### Usage
-// TODO: finish this section
