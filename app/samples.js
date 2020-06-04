@@ -596,11 +596,8 @@ function createSample(sampleInfo, idx) {
 		e.preventDefault()
 		e.stopPropagation()
 	})
-	sample.children[0].children[3].children[1].addEventListener("mousedown", e => { e.stopPropagation() })
 
 	sample.children[0].children[3].children[1].addEventListener("click", function(e) {
-		e.preventDefault()
-		e.stopPropagation()
 		if (!sampleInfo.buffer) { return }
 		if (sampleInfo.audio) {
 			stopPlayback(sampleInfo)
