@@ -755,33 +755,48 @@ function filterUpdate() {
 	}
 	for (let i = 0; i < hiddenLength; ++i) {
 		if (passesFilter(hiddenSamples[i], filter)) {
-			addSample(hiddenSamples.splice(i, 1)[0])
+			const sampleInfo = hiddenSamples.splice(i, 1)[0]
 			--i; --hiddenLength;
+
+			let index = samples.length
+			while (index--) {
+				if (ordering(samples[index], sampleInfo) <= 0) { break }
+			}
+			++index;
+			if (index < maxSamples) {
+				samples.splice(index, 0, sampleInfo)
+				if (samples.length > maxSamples) {
+					unloadedSamples.push(samples.pop())
+				}
+			} else {
+				unloadedSamples.push(sampleInfo)
+			}
 		}
 	}
 	updateSampleListDisplay()
 }
 
-// Returns true if the sample has been added to the loaded samples
+// Returns true if updateSampleListDisplay needs to be called
 function addSample(sampleInfo) {
-	const index = samples.findIndex( sample => ordering(sample, sampleInfo) > 0 )
-	if (samples.length < maxSamples || index !== -1 && index < maxSamples) {
+	let index = samples.length
+	while (index--) {
+		if (ordering(samples[index], sampleInfo) <= 0) { break }
+	}
+	++index;
+	if (index < maxSamples) {
+		samples.splice(index, 0, sampleInfo)
+		if (samples.length > maxSamples) {
+			unloadedSamples.push(samples.pop())
+		}
+
 		const height = remToPx(13.5)+1
 
-		if (index === -1) {
-			samples.push(sampleInfo)
-		} else {
-			samples.splice(index, 0, sampleInfo)
-			if (samples.length > maxSamples) {
-				unloadedSamples.push(samples.pop())
-			}
-			// The first element on the screen
-			const start = Math.min(samples.length-1, Math.floor(sampleList.scrollTop/height))
-			const top = sampleList.firstElementChild
-			if (index < start) {
-				top.style.height = toString(Number(top.style.height) + height) + "px"
-				return
-			}
+		// The first element on the screen
+		const start = Math.min(samples.length-1, Math.floor(sampleList.scrollTop/height))
+		const top = sampleList.firstElementChild
+		if (index < start) {
+			top.style.height = toString(Number(top.style.height) + height) + "px"
+			return
 		}
 
 		// find first element that is below the screen
@@ -791,10 +806,10 @@ function addSample(sampleInfo) {
 			bottom.style.height = toString(Number(bottom.style.height) + height) + "px"
 			return
 		}
-		return true
+
+		updateSampleListDisplay()
 	} else {
 		unloadedSamples.push(sampleInfo)
-		return false
 	}
 }
 
@@ -808,11 +823,8 @@ ipcRenderer.on("add-sample", (e, sampleInfo, match) => {
 		tags: getSelectedTags(),
 		categories: getSelectedCategories()
 	})
-	if (!passesFilter(sampleInfo, filter)) {
-		hiddenSamples.push(sampleInfo)
-		return
-	}
-	if (addSample(sampleInfo)) { updateSampleListDisplay() }
+	if (!passesFilter(sampleInfo, filter)) { hiddenSamples.push(sampleInfo) }
+	else { addSample(sampleInfo) }
 })
 
 ipcRenderer.on("file-data", (e, fileData) => {
