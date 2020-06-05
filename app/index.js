@@ -124,11 +124,12 @@ function createCategoryElement(categoryName) {
 	category.children[0].addEventListener("click", function(){
 		if (this.id === "selected-category") {
 			this.id = ""
+			filterUpdate(filterChange.remove)
 		} else {
 			for (const elem of categoryList.children) { elem.id = "" }
 			this.id = "selected-category"
+			filterUpdate(filterChange.swap)
 		}
-		filterUpdate()
 	})
 
 	category.children[0].addEventListener("dragstart", (e) => {
@@ -248,9 +249,13 @@ function createTagElement(tagInfo) {
 
 	tag.children[0].addEventListener("click", function(){
 		tagInfo.selected = !tagInfo.selected
-		if (tagInfo.selected) this.classList.add("selected-tag")
-		else this.classList.remove("selected-tag")
-		filterUpdate()
+		if (tagInfo.selected) {
+			this.classList.add("selected-tag")
+			filterUpdate(filterChange.add)
+		} else {
+			this.classList.remove("selected-tag")
+			filterUpdate(filterChange.remove)
+		}
 	})
 
 	tag.children[0].addEventListener("dragstart", (e) => {

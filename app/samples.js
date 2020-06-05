@@ -738,7 +738,13 @@ function passesFilter(sampleInfo, filter) {
 	return false
 }
 
-function filterUpdate() {
+ const filterChange = {
+	 add: 2,
+	 swap: 1,
+	 remove: 0
+}
+Object.freeze(filterChange)
+function filterUpdate(change) {
 	for (const sample of samples) {
 		if (sample.audio) { stopPlayback(sample) }
 	}
@@ -747,19 +753,34 @@ function filterUpdate() {
 		categories: getSelectedCategories()
 	})
 	maxSamples = sampleLoadCount
-	hiddenSamples = [...samples, ...unloadedSamples, ...hiddenSamples]
-	hiddenSamples.sort(ordering)
-	samples = []
-	unloadedSamples = []
-	for (let i = 0; i < hiddenSamples.length; ++i) {
-		if (passesFilter(hiddenSamples[i], filter)) {
-			if (samples.length === maxSamples) {
-				unloadedSamples.push(hiddenSamples.splice(i, 1)[0])
-			} else {
-				samples.push(hiddenSamples.splice(i, 1)[0])
+	switch (change) {
+		case filterChange.add:
+			samples = [...samples, ...unloadedSamples]
+			for (let i = 0; i < samples.length; ++i) {
+				if (!passesFilter(samples[i], filter)) {
+					hiddenSamples.push(samples.splice(i, 1)[0])
+					--i
+				}
 			}
-			--i;
-		}
+			unloadedSamples = samples.splice(maxSamples)
+			break;
+		case filterChange.swap:
+		case filterChange.remove:
+			hiddenSamples = [...samples, ...unloadedSamples, ...hiddenSamples]
+			samples = []
+			hiddenSamples.sort(ordering)
+			unloadedSamples = []
+			for (let i = 0; i < hiddenSamples.length; ++i) {
+				if (passesFilter(hiddenSamples[i], filter)) {
+					if (samples.length === maxSamples) {
+						unloadedSamples.push(hiddenSamples.splice(i, 1)[0])
+					} else {
+						samples.push(hiddenSamples.splice(i, 1)[0])
+					}
+					--i;
+				}
+			}
+			break;
 	}
 	updateSampleListDisplay()
 }
