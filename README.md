@@ -37,5 +37,3 @@ Penguin can also be run by without being installed for development purposes by e
 ```
 npm start
 ```
-
-### Usage
