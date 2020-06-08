@@ -18,7 +18,11 @@ Prebuilt binaries can be found under [releases](https://github.com/Dougal-s/Peng
 #### Ubuntu/Debian:
 ```
 sudo apt install git npm
-
+```
+#### MacOS:
+This assumes you already have [brew](https://brew.sh) installed
+```
+brew install git npm
 ```
 ### Installing
 First clone the repository by running:
