@@ -1,6 +1,4 @@
-# ![](penguin-development.svg) Penguin
-
-This is the development branch
+# ![](penguin.svg) Penguin
 
 A simple sample browser made with electron
 
