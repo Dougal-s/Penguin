@@ -26,7 +26,7 @@ function createSampleDir(path) {
 
         try {
             const fs = remote.require("fs")
-            stat = fs.statSync(e.target.value)
+            const stat = fs.statSync(e.target.value)
             if (!stat.isDirectory()) {
                 e.target.classList.add("error")
                 e.target.focus()
