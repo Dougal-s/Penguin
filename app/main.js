@@ -162,7 +162,7 @@ ipcMain.on("updateSampleLimit", (event, limit) => {
 })
 
 function isAudioFile(fileName) {
-	const fileTypes = [".aac",".aiff", ".flac", ".mp3", ".ogg", ".opus", "wav", ".wma", ".wv"]
+	const fileTypes = [".aac", ".aif", ".aiff", ".flac", ".mp3", ".ogg", ".opus", "wav", ".wma", ".wv"]
 	for (const extension of fileTypes)
 		if (fileName.endsWith(extension)) return true
 	return false
