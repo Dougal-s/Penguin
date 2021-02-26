@@ -342,6 +342,35 @@ window.addEventListener("mousemove", e => {
 
 window.addEventListener("mouseup", e => { gainSliderMoving = false })
 
+
+let vGainSliderMoving = false;
+
+const vGainSlider = document.getElementById("gain-slider-vertical")
+const vGainSliderThumb = document.getElementById("gain-slider-thumb-vertical")
+const vGainSliderTrail = document.getElementById("gain-slider-trail-vertical")
+
+function vGainSliderUpdate(e) {
+	const boundingBox = vGainSlider.getBoundingClientRect()
+	const dy = Math.min(Math.max(boundingBox.bottom-e.clientY, 0), boundingBox.height);
+	vGainSliderThumb.style.bottom = dy + "px"
+	vGainSliderTrail.style.height = dy + "px"
+	const gain = 12*4*(dy/boundingBox.height-0.75)
+	gainNode.gain.value = Math.pow(10, gain/20)
+}
+
+vGainSlider.addEventListener("mousedown", e => {
+	vGainSliderMoving = true
+	vGainSliderUpdate(e)
+})
+
+window.addEventListener("mousemove", e => {
+	if (vGainSliderMoving) {
+		vGainSliderUpdate(e)
+	}
+})
+
+window.addEventListener("mouseup", e => { vGainSliderMoving = false })
+
 // create app Menu
 
 const appMenu = Menu.buildFromTemplate([

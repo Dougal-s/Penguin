@@ -221,6 +221,10 @@
     display: flex;
     flex-flow: row nowrap;
 }
+#sidebar[compact="true"] #settings-panel {
+	flex-flow: column nowrap;
+    height: auto;
+}
 
 #settings-panel > svg {
     flex: initial;
@@ -265,5 +269,34 @@
     height: 100%;
     left: 75%;
     width: 0.1rem;
+    background-color: #333EAD;
+}
+
+#sidebar[compact="false"] #gain-slider-vertical {
+    display: none;
+}
+
+#settings-panel > #gain-slider-vertical {
+    background-color: var(--bg-color-2);
+    flex: auto;
+    margin: 0.5rem;
+	height: 10rem;
+    position: relative;
+}
+
+#gain-slider-vertical > #gain-slider-trail-vertical {
+    position: absolute;
+    background: linear-gradient(#333eadf0, #333ead80);
+    bottom: 0;
+    width: 100%;
+    height: 75%;
+}
+
+#gain-slider-vertical > #gain-slider-thumb-vertical {
+    position: absolute;
+    transform: translateY(50%);
+    width: 100%;
+    bottom: 75%;
+    height: 0.1rem;
     background-color: #333EAD;
 }
