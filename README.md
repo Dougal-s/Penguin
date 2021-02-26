@@ -30,7 +30,7 @@ cd Penguin
 ```
 Install the required dependencies and build the installer by running:
 ```
-npm install
+npm ci
 npm run build
 ```
 Locate and run the execute the installer located in dist.
