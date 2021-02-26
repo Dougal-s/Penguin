@@ -670,6 +670,7 @@ function updateSampleListDisplay() {
 		top.innerHTML = "Samples Directories Not Set"
 	} else if (samples.length === 0) {
 		top.style.height = "100%"
+		top.style.userSelect = "none";
 		top.innerHTML = "No Samples Found"
 	} else {
 		top.style.height = (start*height).toString() + "px"
