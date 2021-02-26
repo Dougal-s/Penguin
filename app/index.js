@@ -319,16 +319,24 @@ const gainSlider = document.getElementById("gain-slider")
 const gainSliderThumb = document.getElementById("gain-slider-thumb")
 const gainSliderTrail = document.getElementById("gain-slider-trail")
 
-gainSlider.addEventListener("mousedown", e => { gainSliderMoving = true })
+function gainSliderUpdate(e) {
+	const boundingBox = gainSlider.getBoundingClientRect()
+	const dx = Math.min(Math.max(e.clientX-boundingBox.left, 0), boundingBox.width);
+	gainSliderThumb.style.left = dx + "px"
+	gainSliderTrail.style.width = dx + "px"
+	const gain = 12*4*(dx/boundingBox.width-0.75)
+	gainNode.gain.value = Math.pow(10, gain/20)
+
+}
+
+gainSlider.addEventListener("mousedown", e => {
+	gainSliderMoving = true
+	gainSliderUpdate(e)
+})
 
 window.addEventListener("mousemove", e => {
 	if (gainSliderMoving) {
-		const boundingBox = gainSlider.getBoundingClientRect()
-		const dx = Math.min(Math.max(e.clientX-boundingBox.left, 0), boundingBox.width);
-		gainSliderThumb.style.left = dx + "px"
-		gainSliderTrail.style.width = dx + "px"
-		const gain = 12*4*(dx/boundingBox.width-0.75)
-		gainNode.gain.value = Math.pow(10, gain/20)
+		gainSliderUpdate(e)
 	}
 })
 
